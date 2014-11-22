@@ -380,7 +380,7 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
 			allFrames.push_back(frame);
         }
         movie >> frame_1;
-		motion.push_back(1);
+		motion.push_back(0);
 		allFrames.push_back(frame_1);
         for(int i=0; i<frame_skip; i++)
 		{
@@ -388,7 +388,7 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
 			{
 				break;
             }
-			motion.push_back(1);
+			motion.push_back(0);
 			allFrames.push_back(frame);
         }
         movie >> frame_0;
