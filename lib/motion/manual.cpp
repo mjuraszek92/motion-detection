@@ -368,24 +368,40 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
  
         // odczyt pierwszych 3 ramek z pominięciem zadanej ilości pomiędzy (celem przyspieszenia obliczeń kosztem precyzji)
         movie >> frame_2;
-        for(int i=0; i<frame_skip; i++){
-                if(!movie.read(frame)){
-                        break;
-                }
+		motion.push_back(1);
+		allFrames.push_back(frame_2);
+        for(int i=0; i<frame_skip; i++)
+		{
+            if(!movie.read(frame))
+			{
+				break;
+            }
+			motion.push_back(1);
+			allFrames.push_back(frame);
         }
         movie >> frame_1;
-        for(int i=0; i<frame_skip; i++){
-                if(!movie.read(frame)){
-                        break;
-                }
+		motion.push_back(1);
+		allFrames.push_back(frame_1);
+        for(int i=0; i<frame_skip; i++)
+		{
+            if(!movie.read(frame))
+			{
+				break;
+            }
+			motion.push_back(1);
+			allFrames.push_back(frame);
         }
         movie >> frame_0;
+		motion.push_back(1);
+		allFrames.push_back(frame_0);
         for(int i=0; i<frame_skip; i++)
 		{
 			if(!movie.read(frame))
 			{
 				break;
 			}
+			motion.push_back(1);
+			allFrames.push_back(frame);
         }
                
         // kompresja do przestrzeni szarości
@@ -654,6 +670,8 @@ void saveVideoToFile(cv::VideoWriter video, std::vector<movieFragment> fragmentL
 
 void manualMode(std::deque<cv::Mat> allFrames, std::deque<int> motion, cv::VideoCapture &movie, int width, int height)
 {
+	std::cout << "motion: " << motion.size() << std::endl;
+	std::cout << "allFrames: " << allFrames.size() << std::endl;
 	std::vector<movieFragment> fragmentList; 
 	int movies_count = 0;
 	int break_flag = 0;
