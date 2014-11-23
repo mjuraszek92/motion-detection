@@ -438,8 +438,7 @@ void motion_detection_threads_auto(std::string path, std::map<std::string,double
 	std::cout<<"Processing completed\n";
 	// wyznaczanie prawidłowej liczby fps
 	double fps = movie.get(CV_CAP_PROP_FPS);
-	std::cout<<current_frame<<"\n";
-	if(std::abs(movie.get(CV_CAP_PROP_FRAME_COUNT)-current_frame)>200){
+	if((movie.get(CV_CAP_PROP_FRAME_COUNT)/current_frame) > 1.2 ){
 		fps = fps/2;
 	}
 	// przekazanie wektora ruchu i filmu do funkcji zapisującej
@@ -454,17 +453,17 @@ int main(int argc, char *argv[])
 {
 	std::map<std::string,double> parametry;
 	parametry["frame_skip"] = 1; 
-	parametry["zeros_size"] = 10;
-	parametry["ones_size"] = 10;
-	parametry["befo_motion"] = 10;
-	parametry["past_motion"] = 10;
+	parametry["zeros_size"] = 60;
+	parametry["ones_size"] = 30;
+	parametry["befo_motion"] = 30;
+	parametry["past_motion"] = 30;
 	parametry["area"] = 0.001;
-	parametry["history"] = 100;
+	parametry["history"] = 200;
 	parametry["nmixtures"] = 3;
 	parametry["method"] = 1;
-	parametry["thread_no"] = 4;
-	parametry["threads"] = 4;
-	std::string path = "C://Filmsy//MOV_0013.mp4";
+	parametry["thread_no"] = 1;
+	parametry["threads"] = 1;
+	std::string path = "G://Filmsy//test3.avi";
 
 	motion_detection_threads_auto(path,parametry);
 	return 0;
