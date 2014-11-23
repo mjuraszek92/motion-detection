@@ -315,7 +315,7 @@ void motion_detection_threads_auto(std::string path, std::map<std::string,double
 		current_frame++;
 	}
 
-	cv::namedWindow("Motion");
+	//cv::namedWindow("Motion");
 	if( method == 1 ){ // metoda mieszanin gaussowskich
 		// iteracja po kolejnych ramkach
 		while( true ){
@@ -347,9 +347,9 @@ void motion_detection_threads_auto(std::string path, std::map<std::string,double
 				flag = 0;
 			}			
 			// opcjonalne wyświetlanie ramki z zaznaczonym ruchem
-			cv::drawContours(frame,tmp,-1,cv::Scalar(0,0,255),2);
-			cv::imshow("Motion",frame);
-			if(cv::waitKey(1) >= 5) break;
+			//cv::drawContours(frame,tmp,-1,cv::Scalar(0,0,255),2);
+			//cv::imshow("Motion",frame);
+			//if(cv::waitKey(1) >= 5) break;
 			// ustawienie odpowieniej flagi dla analizowanej ramki
 			motion.push_back(flag);
 			tmp.clear();
@@ -434,8 +434,8 @@ void motion_detection_threads_auto(std::string path, std::map<std::string,double
 			current_frame++;
 			cvtColor(frame_0, frame_0, CV_BGR2GRAY);
 			//opcjonalne wyświetlanie
-			cv::imshow("Motion",frame);
-			if(cv::waitKey(1) >= 10) break;
+			//cv::imshow("Motion",frame);
+			//if(cv::waitKey(1) >= 10) break;
 			// wyznaczenie pola obiektu
 			int pixel_sum = 0;
 			int pixel = 0;
@@ -480,7 +480,7 @@ void motion_detection_threads_auto(std::string path, std::map<std::string,double
 	save_motion_thread_auto(motion,movie,path,fps,start,thread_no);
 	std::cout<<"Saving completed\n";
 
-	cv::destroyWindow("Motion");
+	//cv::destroyWindow("Motion");
 	system("pause");
 }
 
@@ -488,17 +488,17 @@ int main(int argc, char *argv[])
 {
 	std::map<std::string,double> parametry;
 	parametry["frame_skip"] = 1; 
-	parametry["zeros_size"] = 10;
-	parametry["ones_size"] = 10;
-	parametry["befo_motion"] = 10;
-	parametry["past_motion"] = 10;
-	parametry["area"] = 0.0005;
+	parametry["zeros_size"] = 30;
+	parametry["ones_size"] = 30;
+	parametry["befo_motion"] = 30;
+	parametry["past_motion"] = 30;
+	parametry["area"] = 0.001;
 	parametry["history"] = 100;
 	parametry["nmixtures"] = 3;
-	parametry["method"] = 1;
-	parametry["thread_no"] = 1;
+	parametry["method"] = 0;
+	parametry["thread_no"] = 4;
 	parametry["threads"] = 4;
-	std::string path = "C://Filmsy//MOV_0013.mp4";
+	std::string path = "C://Filmsy//test1.avi";
 
 	motion_detection_threads_auto(path,parametry);
 	return 0;
