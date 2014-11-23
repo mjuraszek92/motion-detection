@@ -6,6 +6,7 @@
 #define NOMINMAX
 #include <Windows.h>
 #include <fstream>
+#include <ctime>
 
 // funkcja przetwarzająca wektor ruchu dostarczony przez algorytm detekcji zgodnie z parametrami użytkownika (celem usunięcia szumu, zakłóceń, łączenia framgnetów)
 void motion_processing(std::deque<int> &motion, int offset, int befo_motion, int past_motion, int ones_size, int zeros_size){
@@ -176,17 +177,28 @@ void save_motion_thread_auto(std::deque<int> &motion, cv::VideoCapture &movie, s
 	int current_frame = 0;
 	int break_flag = 0;
 	int index = 0;
-    int frame_width = (int)movie.get(CV_CAP_PROP_FRAME_WIDTH);
-    int frame_height = (int)movie.get(CV_CAP_PROP_FRAME_HEIGHT);
-    std::string video_name;
+  int frame_width = (int)movie.get(CV_CAP_PROP_FRAME_WIDTH);
+  int frame_height = (int)movie.get(CV_CAP_PROP_FRAME_HEIGHT);
+  std::string video_name;
 	std::string directory_path;
 	cv::VideoWriter video;
 	cv::Mat frame;
 	std::fstream log_file;
-
+	std::string temp_dir_path;
+	int N = 1;
+	time_t now = time(0);
+	tm *ltm = localtime(&now);
+	std::string date = std::string("_") + std::to_string((long double)ltm->tm_mday) + std::to_string((long double)ltm->tm_mon+1) + std::to_string((long double)ltm->tm_year+1900);
 	// wyznaczanie ścieżki folderu docelowego i jego tworzenie
-	directory_path = path.substr(0,find_char(path,'/')) + find_filename(path) + std::string("_thread_") + std::to_string((long double)thread_no);
-	CreateDirectory(directory_path.c_str(),NULL); // tworzenie katalogu odpowiadającemu nazwie przetwarzanego pliku wideo
+	
+	
+	directory_path = path.substr(0,find_char(path,'/')) + find_filename(path) + std::string("_thread_") + std::to_string((long double)thread_no) + date;
+	temp_dir_path = directory_path;
+	// tworzenie katalogu odpowiadającemu nazwie przetwarzanego pliku wideo
+	while(CreateDirectory(temp_dir_path.c_str(),NULL) < 1){
+		temp_dir_path = directory_path + std::string("_") + std::to_string((long double)N);
+		N++;
+	}
 
 	// tworzenie pliku logfile
 	log_file.open(directory_path + std::string("//") + std::string("log_file.txt"), std::ios::out ); //tworzenie pliku, do którego zapisane zostaną logi z pracy algorytmu
@@ -240,6 +252,9 @@ void save_motion_thread_auto(std::deque<int> &motion, cv::VideoCapture &movie, s
 		if( break_flag){
 			break;
 		}
+	}
+	if( movies_count < 2 ){
+		log_file << std::string("No movement detected!");
 	}
 	// zamknięcie pliku logfile
 	log_file.close();
@@ -496,10 +511,10 @@ int main(int argc, char *argv[])
 	parametry["history"] = 100;
 	parametry["nmixtures"] = 3;
 	parametry["method"] = 0;
-	parametry["thread_no"] = 4;
+	parametry["thread_no"] = 2;
 	parametry["threads"] = 4;
-	std::string path = "C://Filmsy//test1.avi";
-
+	std::string path = "G://Filmsy//MOV_0013.mp4";
+	
 	motion_detection_threads_auto(path,parametry);
 	return 0;
 }
