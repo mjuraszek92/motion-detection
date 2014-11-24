@@ -261,7 +261,7 @@ void save_motion_thread_auto(std::deque<int> &motion, cv::VideoCapture &movie, s
 }
 
 // funkcja detekcji ruchu w materiale wideo, implementuje metody "Adaptive Gaussian Mixture Background Model" oraz odejmowanie kolejnych ramek
-void motion_detection_threads_auto(std::string path, std::map<std::string,double> parameters){
+void motion_detection_thread_auto(std::string path, std::map<std::string,double> parameters){
 	//odczyt parametrów
 	int frame_skip = parameters["frame_skip"]; 
 	int zeros_size = parameters["zeros_size"];
@@ -496,7 +496,7 @@ void motion_detection_threads_auto(std::string path, std::map<std::string,double
 	std::cout<<"Saving completed\n";
 
 	//cv::destroyWindow("Motion");
-	system("pause");
+	//system("pause");
 }
 
 int main(int argc, char *argv[])
@@ -515,6 +515,6 @@ int main(int argc, char *argv[])
 	parametry["threads"] = 4;
 	std::string path = "G://Filmsy//MOV_0013.mp4";
 	
-	motion_detection_threads_auto(path,parametry);
+	motion_detection_thread_auto(path,parametry);
 	return 0;
 }
