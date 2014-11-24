@@ -38,6 +38,8 @@ void moveToEnd(int &curFrame, int end, std::deque<std::vector<uchar>> allFrames,
 void takeNextFragment(int &curFragment, int &begin, int &end, std::vector<movieFragment> fragmentList, int &curFrame); 
 void takePreviousFragment(int &curFragment, int &begin, int &end, std::vector<movieFragment> fragmentList, int &curFrame); 
 void saveVideoToFile(cv::VideoWriter video, std::vector<movieFragment> fragmentList, int &curFragment, int &curFrame, int &begin, int &end, double fps, int width, int height, std::deque<std::vector<uchar>> allFrames, int data_storage);
+void setBeginFromFrameNo(int &begin, int frameNo, std::deque<int> motion);
+void setEndFromFrameNo(int &end, int frameNo, std::deque<int> motion);
 void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion, cv::VideoCapture &movie, int width, int height, int data_storage, int counter);
 
  
@@ -629,7 +631,7 @@ int main(int argc, char *argv[])
     parametry["thread"] = 1;
 	parametry["data_storage"] = 1;
  
-    std::string path = "C://Users//Mirek//Desktop//Test//MOV_0013.mp4";
+    std::string path = "C://Users//Mirek//Desktop//Test//ryba.mp4";
  
 	motion_detection(path,parametry);
 
@@ -890,14 +892,15 @@ void saveVideoToFile(cv::VideoWriter video, std::vector<movieFragment> fragmentL
 	{
 		if (data_storage == 1)
 		{
+			chdir("images");
 			std::string pic_name = std::string("img") + std::to_string((long double)j) + std::string(".jpg");
 			picToShow = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+			chdir("..");
 		}
 		else
 		{
 			picToShow = cv::imdecode(cv::Mat(allFrames[j]),CV_LOAD_IMAGE_COLOR);
 		}
-
 		video.write(picToShow);
 	}
 	video.release();
@@ -915,6 +918,22 @@ void saveVideoToFile(cv::VideoWriter video, std::vector<movieFragment> fragmentL
 		chdir("images");
 }
 
+void setBeginFromFrameNo(int &begin, int frameNo, std::deque<int> motion)
+{
+	if (frameNo < motion.size())
+		begin = frameNo;
+	else
+		begin = motion.size()-1;
+}
+
+void setEndFromFrameNo(int &end, int frameNo, std::deque<int> motion)
+{
+	if (frameNo < motion.size())
+		end = frameNo;
+	else
+		end = motion.size()-1;
+}
+
 void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion, cv::VideoCapture &movie, int width, int height, int data_storage, int counter)
 {
 	std::vector<movieFragment> fragmentList; 
@@ -923,6 +942,7 @@ void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion
 	unsigned int index = 0;
     std::string video_name;
     cv::VideoWriter video;
+	int frameNo;
 
 	// Dodawanie do listy informacji na temat wszystkich fragmentów z ruchem (początek, koniec, nazwa filmu)
 
@@ -1004,67 +1024,67 @@ void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion
 	{
 		k = cv::waitKey(10000);
 		
-		if (k=='p')
+		if (k=='p') // odtwarzanie - button "odtwarzaj"
 		{
 			playVideo(motion, allFrames, stop, esc, curFrame, momentFilmu, k, mSec, data_storage);
 		}
 		
 		////
-		else if (k=='b') // -1 ramka
+		else if (k=='b') // -1 ramka, button "-1 ramka"
 		{
 			moveOneFrameEarlier(curFrame, allFrames, data_storage);
 		}
 		
 		
-		else if (k=='v') // -5 ramek
+		else if (k=='v') // -5 ramek, button "-5 ramek"
 		{
 			moveFiveFramesEarlier(curFrame, allFrames, data_storage);
 		}
 		
 		
-		else if (k=='n') // + 1 ramka
+		else if (k=='n') // + 1 ramka, button "+1 ramka"
 		{
 			moveOneFrameLater(curFrame, allFrames, motion, data_storage);
 		}
 		
 		
-		else if (k=='m') // + ramek
+		else if (k=='m') // + 5 ramek, button "+5 ramek"
 		{
 			moveFiveFramesLater(curFrame, allFrames, motion, data_storage);
 		}
 		
 		
-		else if (k=='w') // ustaw aktualną ramkę jako początek fragmentu
+		else if (k=='w') // ustaw aktualną ramkę jako początek fragmentu, button "Ustaw początek"
 		{
 			setBegining(begin, curFrame);
 		}
 
 
-		else if (k=='e') // ustaw aktualną ramkę jako koniec fragmentu
+		else if (k=='e') // ustaw aktualną ramkę jako koniec fragmentu, button "Ustaw koniec"
 		{
 			setEnd(end, curFrame);
 		}
 
 
-		else if (k=='r') // przesuń na początek fragmentu
+		else if (k=='r') // przesuń na początek fragmentu, button "Przesuń na początek"
 		{
 			moveToBegining(curFrame, begin, allFrames, data_storage);
 		}
 
 
-		else if (k=='t') // przesuń na koniec fragmentu
+		else if (k=='t') // przesuń na koniec fragmentu, button "Przesuń na koniec"
 		{
 			moveToEnd(curFrame, end, allFrames, data_storage);
 		}
 
 
-		else if (k=='y') // weź poprzedni fragment
+		else if (k=='y') // weź poprzedni fragment, button "Weź poprzedni fragment"
 		{
 			takePreviousFragment(curFragment, begin, end, fragmentList, curFrame);
 		}
 
 
-		else if (k=='u') // weź następny fragment
+		else if (k=='u') // weź następny fragment, button "Weź następny fragment"
 		{
 			takeNextFragment(curFragment, begin, end, fragmentList, curFrame);
 		}
@@ -1075,12 +1095,26 @@ void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion
 			setMovieTime(motion, allFrames, momentFilmu, curFrame, data_storage);
 		}
 
-		else if (k=='i') // zapis fragmentu filmu do pliku
+		else if (k=='i') // zapis fragmentu filmu do pliku, button "Zapisz"
 		{
 			saveVideoToFile(video, fragmentList, curFragment, curFrame, begin, end, fps, width, height, allFrames, data_storage);
 		}
 
-		else if ((int)k==27) //ESC - wyjście
+		else if (k=='[') // ustawienie liczby z textfielda jako początek fragmentu, button "Ustaw", przed textfieldem najlepiej jakaś labelka "Początek"
+		{
+			std::cout << "Podaj poczatek fragmentu" << std::endl;
+			std::cin >> frameNo;
+			setBeginFromFrameNo(begin, frameNo, motion);
+		}
+
+		else if (k==']') // ustawienie liczby z textfielda jako koniec fragmentu, button "Ustaw", przed textfieldem najlepiej jakaś labelka "Koniec"
+		{
+			std::cout << "Podaj koniec fragmentu" << std::endl;
+			std::cin >> frameNo;
+			setEndFromFrameNo(end, frameNo, motion);
+		}
+
+		else if ((int)k==27) //ESC - wyjście, button "Zakończ"
 		{
 			exitFromManualMode(esc);
 		}
