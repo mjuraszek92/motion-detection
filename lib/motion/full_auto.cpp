@@ -456,7 +456,7 @@ void motion_detection_full_auto(std::string path, std::map<std::string,double> p
 	std::cout<<"Saving completed\n";
 
 	//cv::destroyWindow("Motion");
-	system("pause");
+	//system("pause");
 }
 
 int main(int argc, char *argv[])
