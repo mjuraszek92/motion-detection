@@ -110,7 +110,7 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
             motion.push_back(0);
     }
  
-    cv::namedWindow("Motion");
+    //cv::namedWindow("Motion");
     if( method == 1 ){ // metoda mieszanin gaussowskich
             // pętla odczytująca i przetwarzająca kolejne ramki
             while( true ){
@@ -155,9 +155,9 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
                     }
                        
                     // opcjonalne wyświetlanie ramki z zaznaczonym ruchem
-                    cv::drawContours(frame,tmp,-1,cv::Scalar(0,0,255),2);
-                    cv::imshow("Motion",frame);
-                    if(cv::waitKey(1) >= 5) break;
+                    //cv::drawContours(frame,tmp,-1,cv::Scalar(0,0,255),2);
+                    //cv::imshow("Motion",frame);
+                    //if(cv::waitKey(1) >= 5) break;
  
                     motion.push_back(flag);
                     tmp.clear();
@@ -330,8 +330,8 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
 			}
             cvtColor(frame_0, frame_0, CV_BGR2GRAY);
             //opcjonalne wyświetlanie
-            cv::imshow("Motion",frame);
-            if(cv::waitKey(1) >= 10) break;
+            //cv::imshow("Motion",frame);
+            //if(cv::waitKey(1) >= 10) break;
  
             // wyznaczenie pola obiektu
             int pixel_sum = 0;
