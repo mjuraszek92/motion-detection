@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <fstream>
 #include <ctime>
+#include <direct.h>
 
 extern void motion_processing(std::deque<int> &motion, int offset, int beforeMotion, int pastMotion, int onesSize, int zerosSize);
 extern int find_char(std::string path, char c);
@@ -34,11 +35,10 @@ void save_motion_full_auto(std::deque<int> &motion, cv::VideoCapture &movie, std
 	directory_path = path.substr(0,find_char(path,'/')) + find_filename(path) + std::string("_auto") + date;
 	temp_dir_path = directory_path;
 	// tworzenie katalogu odpowiadającemu nazwie przetwarzanego pliku wideo
-	while(CreateDirectory(temp_dir_path.c_str(),NULL) < 1){
+	while( mkdir(temp_dir_path.c_str()) < 0 ){
 		temp_dir_path = directory_path + std::string("_") + std::to_string((long double)N);
 		N++;
 	}
-
 	// tworzenie pliku logfile
 	log_file.open(temp_dir_path + std::string("//") + std::string("log_file.txt"), std::ios::out );
 	
