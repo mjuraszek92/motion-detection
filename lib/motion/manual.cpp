@@ -633,6 +633,9 @@ int main(int argc, char *argv[])
  
     std::string path = "C://Users//Mirek//Desktop//Test//ryba.mp4";
  
+	std::string dst = "C://Users//Mirek//Desktop//Algo";
+	chdir(dst.c_str());
+
 	motion_detection(path,parametry);
 
 	std::string pic_name;
