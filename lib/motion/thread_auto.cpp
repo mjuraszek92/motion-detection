@@ -201,7 +201,7 @@ void save_motion_thread_auto(std::deque<int> &motion, cv::VideoCapture &movie, s
 	}
 
 	// tworzenie pliku logfile
-	log_file.open(directory_path + std::string("//") + std::string("log_file.txt"), std::ios::out ); //tworzenie pliku, do którego zapisane zostaną logi z pracy algorytmu
+	log_file.open(temp_dir_path + std::string("//") + std::string("log_file.txt"), std::ios::out ); //tworzenie pliku, do którego zapisane zostaną logi z pracy algorytmu
 	
 	// wyznaczenie fragmentu filmu od którego rozpoczyna się analiza wektora ruchu dla konkretnego wątka
 	movie.set(CV_CAP_PROP_POS_AVI_RATIO,0);
@@ -229,7 +229,7 @@ void save_motion_thread_auto(std::deque<int> &motion, cv::VideoCapture &movie, s
 
 		// otwarcie nowego pliku wideo, zapis informacji do pliku z logami
 		video_name = std::string("video_") + std::to_string((long double)movies_count) + std::string(".avi");
-		video.open(directory_path + std::string("//") + video_name,CV_FOURCC('F','M','P','4'),fps, cv::Size(frame_width,frame_height),true);
+		video.open(temp_dir_path + std::string("//") + video_name,CV_FOURCC('F','M','P','4'),fps, cv::Size(frame_width,frame_height),true);
 
 		// zapis do pliku logfile informacji o bieżącym fragmencie
 		log_file << "No.: " << movies_count << "   Video Name: " << video_name << "   Motion Start Sec (Frame): " << std::floor(((float)index+start)/fps) << " (" << (index + start) << ")" << "   Motion End Sec (Frame): ";
