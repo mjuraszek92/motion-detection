@@ -7,194 +7,11 @@
 #include <Windows.h>
 #include <fstream>
 #include <ctime>
+#include <direct.h>
 
-// funkcja przetwarzająca wektor ruchu dostarczony przez algorytm detekcji zgodnie z parametrami użytkownika (celem usunięcia szumu, zakłóceń, łączenia framgnetów)
-void motion_processing(std::deque<int> &motion, int offset, int befo_motion, int past_motion, int ones_size, int zeros_size){
-    int median_sum;
-    int big_counter = offset;
-    int small_counter = 0;
-    int break_flag = 0;
-
-    // Filtracja medianowa wektora ruchu
-    for(int i=offset; i<motion.size()-offset-1; i++){
-        median_sum = 0;
-        for( int j=i-offset; j<=i+offset; j++ ){
-            median_sum+=motion[j];
-        }
-        if( median_sum > offset+0.5 ){
-            motion[i] = 1;
-        } else {
-            motion[i] = 0;
-        }
-    }
-
-    // Pętla usuwająca ruch trwający krócej niż zadana długość (prawdopodobny szum, zakłócenia)
-    while( true ){
-        small_counter = 0;
-
-        while( motion[big_counter] == 0 ){
-            ++big_counter;
-            if( big_counter > motion.size()-offset-1 ){
-                break_flag = 1;
-                break;
-            }
-        }
-
-        if( break_flag == 1 ){
-            break;
-        }
-
-        while( motion[big_counter] == 1 ){
-            ++small_counter;
-            ++big_counter;
-        }
-
-        if( small_counter < ones_size ){
-            while( small_counter > 0 ){
-                motion[big_counter-small_counter] = 0;
-                --small_counter;
-            }
-        }
-    }
-
-    // Pętla scalająca fragmenty ruchu przedzielone niewielkimi (mniejszymi niż zadane) przerwami (zakłócenia)
-    big_counter = offset;
-    small_counter = 0;
-    break_flag = 0;
-
-    while( true ){
-        small_counter = 0;
-
-        while( motion[big_counter] == 1 ){
-            ++big_counter;
-        }
-
-        while( motion[big_counter] == 0 ){
-            ++small_counter;
-            ++big_counter;
-            if( big_counter > motion.size() - offset - 1 ){
-                break_flag = 1;
-                break;
-            }
-        }
-
-        if( break_flag == 1 ){
-            break;
-        }
-
-        if( small_counter < zeros_size ){
-            while( small_counter > 0 ){
-                motion[big_counter-small_counter] = 1;
-                --small_counter;
-            }
-        }
-    }
-
-    // Usunięcie dodatkowego konteksu wykorzystywanego przez filtracje medianową
-    for(int i=0; i<offset; i++){
-        motion.pop_front();
-        motion.pop_back();
-    }
-
-    // Pętla umożliwiająca zapisanie dodatkowych N ramek przed wystąpieniem ruchu oraz M ramek po jego wystąpnieniu
-    big_counter = 0;
-    small_counter = 0;
-    break_flag = 0;
-    while( true ){
-        while( motion[big_counter] == 0 ){
-            ++big_counter;
-            if( big_counter >= motion.size() ){
-                break_flag = 1;
-                break;
-            }
-        }
-
-        if( break_flag == 1 ){
-            break;
-        }
-
-
-        small_counter = 1;
-        while( (small_counter <= befo_motion) && ((signed int)big_counter-(signed int)small_counter > 0) ){
-            motion[big_counter-small_counter] = 1;
-            ++small_counter;
-        }
-
-        while( motion[big_counter] == 1 ){
-            ++big_counter;
-            if( big_counter >= motion.size() ){
-                break_flag = 1;
-                break;
-            }
-        }
-
-        if( break_flag == 1 ){
-            break;
-        }
-
-        small_counter = 0;
-        while( (small_counter < past_motion) && (big_counter+small_counter < motion.size()) ){
-            motion[big_counter+small_counter] = 1;
-            ++small_counter;
-        }
-
-        while( motion[big_counter] == 1 ){
-            ++big_counter;
-            if( big_counter >= motion.size() ){
-                break_flag = 1;
-                break;
-            }
-        }
-
-        if( break_flag == 1 ){
-            break;
-        }
-    }
-}
-
-// funkcja odnajdująca pozycję znaku w napisie
-int find_char(std::string path, char c){
-    int position = 0;
-    for(int i=path.length()-1; i>=0; i--){
-        if( path[i] == c ){
-            position = i;
-            break;
-        }
-    }
-    return position+1;
-}
-
-// funkcja wyznaczjąca nazwę pliku bez rozszerzenia z pełnej ścieżki
-std::string find_filename(std::string path){
-    std::string file_name = path.substr(find_char(path,'/'),path.length());
-    file_name = file_name.substr(0,find_char(file_name,'.')-1);
-    return file_name;
-}
-
-
-std::wstring s2wsa(const std::string& s) {
-    int len;
-    int slength = (int)s.length() + 1;
-    len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, 0, 0);
-    wchar_t* buf = new wchar_t[len];
-    MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, buf, len);
-    std::wstring r(buf);
-    delete[] buf;
-    return r;
-}
-
-std::string ws2sa(const std::wstring& s)
-{
-    int len;
-    int slength = (int)s.length() + 1;
-    len = WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, 0, 0, 0, 0);
-    char* buf = new char[len];
-    WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, buf, len, 0, 0);
-    std::string r(buf);
-    delete[] buf;
-    return r;
-}
-
+extern void motion_processing(std::deque<int> &motion, int offset, int beforeMotion, int pastMotion, int onesSize, int zerosSize);
+extern int find_char(std::string path, char c);
+extern std::string find_filename(std::string path);
 
 // funkcja dokonująca zapisu fragmentów filmu zawierających ruch w oparciu o wektor ruchu
 void save_motion_full_auto(std::deque<int> &motion, cv::VideoCapture &movie, std::string path, double fps, int start, int thread_no){
@@ -217,17 +34,13 @@ void save_motion_full_auto(std::deque<int> &motion, cv::VideoCapture &movie, std
 	// wyznaczanie ścieżki folderu docelowego i jego tworzenie
 	directory_path = path.substr(0,find_char(path,'/')) + find_filename(path) + std::string("_auto") + date;
 	temp_dir_path = directory_path;
-    //std::wstring wdir = s2ws(directory_path);
-    std::wstring wtemp = s2wsa(temp_dir_path);
-
-    // tworzenie katalogu odpowiadającemu nazwie przetwarzanego pliku wideo
-    while(CreateDirectory(wtemp.c_str(),NULL) < 1){
-        temp_dir_path = directory_path + std::string("_") + std::to_string((long double)N);
-        N++;
-    }
-
+	// tworzenie katalogu odpowiadającemu nazwie przetwarzanego pliku wideo
+	while( mkdir(temp_dir_path.c_str()) < 0 ){
+		temp_dir_path = directory_path + std::string("_") + std::to_string((long double)N);
+		N++;
+	}
 	// tworzenie pliku logfile
-	log_file.open(directory_path + std::string("//") + std::string("log_file.txt"), std::ios::out );
+	log_file.open(temp_dir_path + std::string("//") + std::string("log_file.txt"), std::ios::out );
 	
 	movie.set(CV_CAP_PROP_POS_AVI_RATIO,0);
 
@@ -250,7 +63,7 @@ void save_motion_full_auto(std::deque<int> &motion, cv::VideoCapture &movie, std
 
 		// otwarcie nowego pliku wideo, zapis informacji do pliku z logami
 		video_name = std::string("video_") + std::to_string((long double)movies_count) + std::string(".avi");
-		video.open(directory_path + std::string("//") + video_name,CV_FOURCC('F','M','P','4'),fps, cv::Size(frame_width,frame_height),true);
+		video.open(temp_dir_path + std::string("//") + video_name,CV_FOURCC('F','M','P','4'),fps, cv::Size(frame_width,frame_height),true);
 
 		// zapis do pliku logfile informacji o bieżącym fragmencie
 		log_file << "No.: " << movies_count << "   Video Name: " << video_name << "   Motion Start Sec (Frame): " << std::floor((float)index/fps) << " (" << (index) << ")" << "   Motion End Sec (Frame): ";
@@ -486,5 +299,4 @@ void motion_detection_full_auto(std::string path, std::map<std::string,double> p
 	//cv::destroyWindow("Motion");
 	//system("pause");
 }
-
 

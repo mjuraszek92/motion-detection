@@ -1,9 +1,4 @@
 #include <opencv2\opencv.hpp>
-#include <opencv2\core\core.hpp>
-#include <opencv2\imgproc\imgproc.hpp>
-#include <opencv2\highgui\highgui.hpp>
-#include <iostream>
-#include <math.h>
 #include <vector>
 #include <deque>
 #include <map>
@@ -15,14 +10,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+extern void motion_processing(std::deque<int> &motion, int offset, int beforeMotion, int pastMotion, int onesSize, int zerosSize);
+extern int find_char(std::string path, char c);
+extern std::string find_filename(std::string path);
 
 struct movieFragment {
 	int begin;
 	int end;
 	std::string name;
 };
-
 
 void moveOneFrameEarlier(int &curFrame, std::deque<std::vector<uchar>> allFrames, int data_storage);
 void moveFiveFramesEarlier(int &curFrame, std::deque<std::vector<uchar>> allFrames, int data_storage);
@@ -39,249 +35,11 @@ void moveToEnd(int &curFrame, int end, std::deque<std::vector<uchar>> allFrames,
 void takeNextFragment(int &curFragment, int &begin, int &end, std::vector<movieFragment> fragmentList, int &curFrame); 
 void takePreviousFragment(int &curFragment, int &begin, int &end, std::vector<movieFragment> fragmentList, int &curFrame); 
 void saveVideoToFile(cv::VideoWriter video, std::vector<movieFragment> fragmentList, int &curFragment, int &curFrame, int &begin, int &end, double fps, int width, int height, std::deque<std::vector<uchar>> allFrames, int data_storage);
+void setBeginFromFrameNo(int &begin, int frameNo, std::deque<int> motion);
+void setEndFromFrameNo(int &end, int frameNo, std::deque<int> motion);
 void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion, cv::VideoCapture &movie, int width, int height, int data_storage, int counter);
 
- 
-// funkcja przetwarzająca wektor ruchu dostarczony przez algorytm detekcji zgodnie z parametrami użytkownika (celem usunięcia szumu, zakłóceń, łączenia framgnetów)
-void motion_processing(std::deque<int> &motion, int offset, int befo_motion, int past_motion, int ones_size, int zeros_size){
-        int median_sum;
-        unsigned int big_counter = offset;
-        int small_counter = 0;
-        int break_flag = 0;
- 
-        // Filtracja medianowa wektora ruchu
-        for(int i=offset; i<motion.size()-offset-1; i++){
-                median_sum = 0;
-                for( int j=i-offset; j<=i+offset; j++ ){
-                        median_sum+=motion[j];
-                }
-                if( median_sum > offset+0.5 ){
-                        motion[i] = 1;
-                } else {
-                        motion[i] = 0;
-                }
-        }
- 
-        // Pętla usuwająca ruch trwający krócej niż zadana długość (prawdopodobny szum, zakłócenia)
-        while( true ){
-                small_counter = 0;
- 
-                while( motion[big_counter] == 0 ){
-                        ++big_counter;
-                        if( big_counter > motion.size()-offset-1 ){
-                                break_flag = 1;
-                                break;
-                        }
-                }
- 
-                if( break_flag == 1 ){
-                        break;
-                }
- 
-                while( motion[big_counter] == 1 ){
-                        ++small_counter;
-                        ++big_counter;
-                }
- 
-                if( small_counter < ones_size ){
-                        while( small_counter > 0 ){
-                                motion[big_counter-small_counter] = 0;
-                                --small_counter;
-                        }
-                }
-        }
- 
-        // Pętla scalająca fragmenty ruchu przedzielone niewielkimi (mniejszymi niż zadane) przerwami (zakłócenia)
-        big_counter = offset;
-        small_counter = 0;
-        break_flag = 0;
- 
-        while( true ){
-                small_counter = 0;
- 
-                while( motion[big_counter] == 1 ){
-                        ++big_counter;
-                }
- 
-                while( motion[big_counter] == 0 ){
-                        ++small_counter;
-                        ++big_counter;
-                        if( big_counter > motion.size() - offset - 1 ){
-                                break_flag = 1;
-                                break;
-                        }
-                }
- 
-                if( break_flag == 1 ){
-                        break;
-                }
- 
-                if( small_counter < zeros_size ){
-                        while( small_counter > 0 ){
-                                motion[big_counter-small_counter] = 1;
-                                --small_counter;
-                        }
-                }
-        }
- 
-        // Usunięcie dodatkowego konteksu wykorzystywanego przez filtracje medianową
-        for(int i=0; i<offset; i++){
-                motion.pop_front();
-                motion.pop_back();
-        }
-       
-        // Pętla umożliwiająca zapisanie dodatkowych N ramek przed wystąpieniem ruchu oraz M ramek po jego wystąpnieniu
-        big_counter = 0;
-        small_counter = 0;
-        break_flag = 0;
-        while( true ){
-                while( motion[big_counter] == 0 ){
-                        ++big_counter;
-                        if( big_counter >= motion.size() ){
-                                break_flag = 1;
-                                break;
-                        }
-                }
- 
-                if( break_flag == 1 ){
-                        break;
-                }
- 
-               
-                small_counter = 1;
-                while( (small_counter <= befo_motion) && ((signed int)big_counter-(signed int)small_counter > 0) ){
-                        motion[big_counter-small_counter] = 1;
-                        ++small_counter;
-                }
- 
-                while( motion[big_counter] == 1 ){
-                        ++big_counter;
-                        if( big_counter >= motion.size() ){
-                                break_flag = 1;
-                                break;
-                        }
-                }
- 
-                if( break_flag == 1 ){
-                        break;
-                }
-               
-                small_counter = 0;
-                while( (small_counter < past_motion) && (big_counter+small_counter < motion.size()) ){
-                        motion[big_counter+small_counter] = 1;
-                        ++small_counter;
-                }
- 
-                while( motion[big_counter] == 1 ){
-                        ++big_counter;
-                        if( big_counter >= motion.size() ){
-                                break_flag = 1;
-                                break;
-                        }
-                }
- 
-                if( break_flag == 1 ){
-                        break;
-                }
-        }
-}
 
-int find_char(std::string path, char c){
-        int position = 0;
-        for(int i=path.length()-1; i>=0; i--){
-                if( path[i] == c ){
-                        position = i;
-                        break;
-                }
-        }
-        return position+1;
-}
- 
-// funkcja wyznaczjąca nazwę pliku bez rozszerzenia z pełnej ścieżki
-std::string find_filename(std::string path){
-        std::string file_name = path.substr(find_char(path,'/'),path.length());
-        file_name = file_name.substr(0,find_char(file_name,'.')-1);
-        return file_name;
-}
-
-std::wstring s2ws(const std::string& s) {
-    int len;
-    int slength = (int)s.length() + 1;
-    len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, 0, 0);
-    wchar_t* buf = new wchar_t[len];
-    MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, buf, len);
-    std::wstring r(buf);
-    delete[] buf;
-    return r;
-}
-
-void save_motion(std::deque<int> &motion, cv::VideoCapture &movie, std::string path){
-        int movies_count = 0;
-        int break_flag = 0;
-        unsigned int index = 0;
-        double fps = movie.get(CV_CAP_PROP_FPS);
-    int frame_width = movie.get(CV_CAP_PROP_FRAME_WIDTH);
-    int frame_height = movie.get(CV_CAP_PROP_FRAME_HEIGHT);
-    std::string video_name;
-        std::string directory_path;
-        cv::VideoWriter video;
-        cv::Mat frame;
-        std::fstream log_file;
- 
-        directory_path = path.substr(0,find_char(path,'/')) + find_filename(path);
-        std::wstring stemp = s2ws(directory_path);
-
-
-
-            CreateDirectory(stemp.c_str(),NULL); // tworzenie katalogu odpowiadającemu nazwie przetwarzanego pliku wideo
-
-            log_file.open(directory_path + std::string("//") + std::string("log_file.txt"), std::ios::out ); //tworzenie pliku, do którego zapisane zostaną logi z pracy algorytmu
-
-        // pętla iterująca po filmie i wektorze ruchu, umożliwiająca zapis odpowiednich ramek
-        movie.set(CV_CAP_PROP_POS_AVI_RATIO,0);
-        while( true ){
-                ++movies_count;
- 
-                // pomijanie ramek nie zawierających ruchu
-                while( motion[index] == 0 ){
-                        movie >> frame;
-                        ++index;
-                        if( index == motion.size() ){
-                                break_flag = 1;
-                                break;
-                        }
-                }
-                if( break_flag ){
-                        break;
-                }
- 
-                // otwarcie nowego pliku wideo, zapis informacji do pliku z logami
-                video_name = std::string("video_") + std::to_string((long double)movies_count) + std::string(".avi");
-                video.open(directory_path + std::string("//") + video_name,CV_FOURCC('M','P','E','G'),fps, cv::Size(frame_width,frame_height),true);
-                log_file << "No.: " << movies_count << "   Video Name: " << video_name << "   Motion Start Sec (Frame): " << std::floor(index/fps) << " (" << index << ")" << "   Motion End Sec (Frame): ";
-               
-                // zapisywanie ramek zawierających ruch
-                while( motion[index] == 1 ){
-                        movie >> frame;
-                        ++index;
-                        video.write(frame);
-                        if( index == motion.size() ){
-                                break_flag = 1;
-                                break;
-                        }
-                }
-               
-                //zapis dodatkowych informacji do pliku z logami, zamknięcie utworzonego pliku wideo
-                log_file << std::floor(index/fps) << " (" << index << ")" << "\n";
-                video.release();
-               
-                if( break_flag){
-                        break;
-                }
-        }
-        log_file.close();
-}
- 
 void motion_detection(std::string path, std::map<std::string,double> parameters){
         //odczyt parametrów
     int frame_skip = parameters["frame_skip"];
@@ -585,7 +343,7 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
                     }
             }
             // jeśli obiekt jest większy niż zadane minimum to ruch występuje, jeśli nie - potencjalne zakłócenia i szumy
-            if( pixel_sum > requested_area*area/2 ){
+            if( pixel_sum > requested_area*area/3 ){
                     flag = 1;
             } else {
                     flag = 0;
@@ -630,7 +388,6 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
 	cv::destroyWindow("Motion");
 }
  
-
 
 // Funkcje do manuala
 
@@ -868,14 +625,15 @@ void saveVideoToFile(cv::VideoWriter video, std::vector<movieFragment> fragmentL
 	{
 		if (data_storage == 1)
 		{
+			chdir("images");
 			std::string pic_name = std::string("img") + std::to_string((long double)j) + std::string(".jpg");
 			picToShow = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+			chdir("..");
 		}
 		else
 		{
 			picToShow = cv::imdecode(cv::Mat(allFrames[j]),CV_LOAD_IMAGE_COLOR);
 		}
-
 		video.write(picToShow);
 	}
 	video.release();
@@ -893,6 +651,22 @@ void saveVideoToFile(cv::VideoWriter video, std::vector<movieFragment> fragmentL
 		chdir("images");
 }
 
+void setBeginFromFrameNo(int &begin, int frameNo, std::deque<int> motion)
+{
+	if (frameNo < motion.size())
+		begin = frameNo;
+	else
+		begin = motion.size()-1;
+}
+
+void setEndFromFrameNo(int &end, int frameNo, std::deque<int> motion)
+{
+	if (frameNo < motion.size())
+		end = frameNo;
+	else
+		end = motion.size()-1;
+}
+
 void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion, cv::VideoCapture &movie, int width, int height, int data_storage, int counter)
 {
 	std::vector<movieFragment> fragmentList; 
@@ -901,6 +675,7 @@ void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion
 	unsigned int index = 0;
     std::string video_name;
     cv::VideoWriter video;
+	int frameNo;
 
 	// Dodawanie do listy informacji na temat wszystkich fragmentów z ruchem (początek, koniec, nazwa filmu)
 
@@ -982,67 +757,67 @@ void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion
 	{
 		k = cv::waitKey(10000);
 		
-		if (k=='p')
+		if (k=='p') // odtwarzanie - button "odtwarzaj"
 		{
 			playVideo(motion, allFrames, stop, esc, curFrame, momentFilmu, k, mSec, data_storage);
 		}
 		
 		////
-		else if (k=='b') // -1 ramka
+		else if (k=='b') // -1 ramka, button "-1 ramka"
 		{
 			moveOneFrameEarlier(curFrame, allFrames, data_storage);
 		}
 		
 		
-		else if (k=='v') // -5 ramek
+		else if (k=='v') // -5 ramek, button "-5 ramek"
 		{
 			moveFiveFramesEarlier(curFrame, allFrames, data_storage);
 		}
 		
 		
-		else if (k=='n') // + 1 ramka
+		else if (k=='n') // + 1 ramka, button "+1 ramka"
 		{
 			moveOneFrameLater(curFrame, allFrames, motion, data_storage);
 		}
 		
 		
-		else if (k=='m') // + ramek
+		else if (k=='m') // + 5 ramek, button "+5 ramek"
 		{
 			moveFiveFramesLater(curFrame, allFrames, motion, data_storage);
 		}
 		
 		
-		else if (k=='w') // ustaw aktualną ramkę jako początek fragmentu
+		else if (k=='w') // ustaw aktualną ramkę jako początek fragmentu, button "Ustaw początek"
 		{
 			setBegining(begin, curFrame);
 		}
 
 
-		else if (k=='e') // ustaw aktualną ramkę jako koniec fragmentu
+		else if (k=='e') // ustaw aktualną ramkę jako koniec fragmentu, button "Ustaw koniec"
 		{
 			setEnd(end, curFrame);
 		}
 
 
-		else if (k=='r') // przesuń na początek fragmentu
+		else if (k=='r') // przesuń na początek fragmentu, button "Przesuń na początek"
 		{
 			moveToBegining(curFrame, begin, allFrames, data_storage);
 		}
 
 
-		else if (k=='t') // przesuń na koniec fragmentu
+		else if (k=='t') // przesuń na koniec fragmentu, button "Przesuń na koniec"
 		{
 			moveToEnd(curFrame, end, allFrames, data_storage);
 		}
 
 
-		else if (k=='y') // weź poprzedni fragment
+		else if (k=='y') // weź poprzedni fragment, button "Weź poprzedni fragment"
 		{
 			takePreviousFragment(curFragment, begin, end, fragmentList, curFrame);
 		}
 
 
-		else if (k=='u') // weź następny fragment
+		else if (k=='u') // weź następny fragment, button "Weź następny fragment"
 		{
 			takeNextFragment(curFragment, begin, end, fragmentList, curFrame);
 		}
@@ -1053,12 +828,26 @@ void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion
 			setMovieTime(motion, allFrames, momentFilmu, curFrame, data_storage);
 		}
 
-		else if (k=='i') // zapis fragmentu filmu do pliku
+		else if (k=='i') // zapis fragmentu filmu do pliku, button "Zapisz"
 		{
 			saveVideoToFile(video, fragmentList, curFragment, curFrame, begin, end, fps, width, height, allFrames, data_storage);
 		}
 
-		else if ((int)k==27) //ESC - wyjście
+		else if (k=='[') // ustawienie liczby z textfielda jako początek fragmentu, button "Ustaw", przed textfieldem najlepiej jakaś labelka "Początek"
+		{
+			std::cout << "Podaj poczatek fragmentu" << std::endl;
+			std::cin >> frameNo;
+			setBeginFromFrameNo(begin, frameNo, motion);
+		}
+
+		else if (k==']') // ustawienie liczby z textfielda jako koniec fragmentu, button "Ustaw", przed textfieldem najlepiej jakaś labelka "Koniec"
+		{
+			std::cout << "Podaj koniec fragmentu" << std::endl;
+			std::cin >> frameNo;
+			setEndFromFrameNo(end, frameNo, motion);
+		}
+
+		else if ((int)k==27) //ESC - wyjście, button "Zakończ"
 		{
 			exitFromManualMode(esc);
 		}

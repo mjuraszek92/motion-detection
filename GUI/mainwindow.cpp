@@ -61,7 +61,8 @@ void MainWindow::connectActions()
      connect(ui->auto2_met1, SIGNAL(clicked()), this, SLOT(clickMetoda1()));
      connect(ui->auto2_met2, SIGNAL(clicked()), this, SLOT(clickMetoda2()));
 
-
+     timer = new QTimer(this);
+     connect(timer,SIGNAL(timeout()),this,SLOT(updateImg()));
 
      //connect(thread, SIGNAL(started()), thread, SLOT(callAuto2()));
 
@@ -300,14 +301,38 @@ void MainWindow::clickAuto2start()
                                                         parametry["threads"] = Threads;
                                                         std::string path = "F://film2.avi";
 
-                                                    //fthredy[nr-1] = new FFthread(path,parametry);
-                                                    //fthredy[nr-1]->start();
+                                                    fthredy[nr-1] = new FFthread(path,parametry);
+                                                    fthredy[nr-1]->start();
 
 
                                                 } else if(tryb==0){
                                                     ui->Auto2->hide();
                                                     ui->Man->show();
-                                                    //run
+
+                                                    videoPath = QString::fromStdString("F://film2.avi");
+                                                    video.setFile(fileName);
+                                                    if(video.exists()){
+                                                    path = fileName.toUtf8().constData();
+                                                    capture.open(path);
+
+
+                                                    if(!capture.isOpened()){
+                                                               qDebug() << "Error, video not loaded";
+                                                    }
+                                                    }
+
+
+
+
+
+
+
+
+
+
+
+
+
                                             }
 
 
@@ -406,7 +431,17 @@ void MainWindow::clickMannext()
 
 void MainWindow::updateImg(){
 
+   capture.read(frame);
 
+   if (frame.empty()==true){
+       return;
+   }
+
+
+    cv::cvtColor(frame, frame, CV_BGR2RGB);
+    QImage qim((uchar*)frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
+
+    ui->label_22->setPixmap((QPixmap::fromImage(qim)));
 
 
 }
@@ -442,6 +477,46 @@ void MainWindow::clickAuto1add()
 }
 
 void MainWindow::clickManplay(){
+
+//    videoPath = QString::fromStdString("F://film2.avi");
+//    video.setFile(fileName);
+//    if(video.exists()){
+//        path = videoPath.toUtf8().constData();
+//        capture.open(path);
+
+
+//        if(!capture.isOpened()){
+//            qDebug() << "Error, video not loaded";
+//        }
+
+//        cv::namedWindow("window",1);
+//        while(true)
+//        {
+//            bool success = capture.read(frame);
+//                        if(success == false){
+//                            break;
+//                        }
+
+//            cv::cvtColor(frame, frame, CV_BGR2RGB);
+//            QImage qim((uchar*)frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
+
+//            ui->label_22->setPixmap((QPixmap::fromImage(qim)));
+//             cv::waitKey(20);
+//        }
+//        cv::waitKey(0);
+//    }
+//    else{
+//        qDebug() << "Error, File doesn't exist";
+//    }
+
+    if(timer->isActive()==true){
+        timer->stop();
+        ui->man_play->setText("Play");
+    } else{
+        timer->start(20);
+         ui->man_play->setText("Pause");
+    }
+
 
 
 }

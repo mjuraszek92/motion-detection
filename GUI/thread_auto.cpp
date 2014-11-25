@@ -7,36 +7,11 @@
 #include <Windows.h>
 #include <fstream>
 #include <ctime>
-#include "common.cpp"
+#include <direct.h>
 
-
-// funkcja odnajdująca pozycję znaku w napisie
-
-
-
-std::wstring s2ws(const std::string& s) {
-    int len;
-    int slength = (int)s.length() + 1;
-    len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, 0, 0);
-    wchar_t* buf = new wchar_t[len];
-    MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, buf, len);
-    std::wstring r(buf);
-    delete[] buf;
-    return r;
-}
-
-std::string ws2s(const std::wstring& s)
-{
-    int len;
-    int slength = (int)s.length() + 1;
-    len = WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, 0, 0, 0, 0);
-    char* buf = new char[len];
-    WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, buf, len, 0, 0);
-    std::string r(buf);
-    delete[] buf;
-    return r;
-}
-
+extern void motion_processing(std::deque<int> &motion, int offset, int beforeMotion, int pastMotion, int onesSize, int zerosSize);
+extern int find_char(std::string path, char c);
+extern std::string find_filename(std::string path);
 
 // funkcja dokonująca zapisu fragmentów filmu zawierających ruch w oparciu o wektor ruchu
 void save_motion_thread_auto(std::deque<int> &motion, cv::VideoCapture &movie, std::string path, double fps, int start, int thread_no){
@@ -44,9 +19,9 @@ void save_motion_thread_auto(std::deque<int> &motion, cv::VideoCapture &movie, s
 	int current_frame = 0;
 	int break_flag = 0;
 	int index = 0;
-  int frame_width = (int)movie.get(CV_CAP_PROP_FRAME_WIDTH);
-  int frame_height = (int)movie.get(CV_CAP_PROP_FRAME_HEIGHT);
-  std::string video_name;
+	int frame_width = (int)movie.get(CV_CAP_PROP_FRAME_WIDTH);
+	int frame_height = (int)movie.get(CV_CAP_PROP_FRAME_HEIGHT);
+	std::string video_name;
 	std::string directory_path;
 	cv::VideoWriter video;
 	cv::Mat frame;
@@ -61,12 +36,8 @@ void save_motion_thread_auto(std::deque<int> &motion, cv::VideoCapture &movie, s
 	
 	directory_path = path.substr(0,find_char(path,'/')) + find_filename(path) + std::string("_thread_") + std::to_string((long double)thread_no) + date;
 	temp_dir_path = directory_path;
-
-    //std::wstring wdir = s2ws(directory_path);
-    std::wstring wtemp = s2ws(temp_dir_path);
-
-    // tworzenie katalogu odpowiadającemu nazwie przetwarzanego pliku wideo
-    while(CreateDirectory(wtemp.c_str(),NULL) < 1){
+	// tworzenie katalogu odpowiadającemu nazwie przetwarzanego pliku wideo
+	while( mkdir(temp_dir_path.c_str()) < 0 ){
 		temp_dir_path = directory_path + std::string("_") + std::to_string((long double)N);
 		N++;
 	}
@@ -132,7 +103,7 @@ void save_motion_thread_auto(std::deque<int> &motion, cv::VideoCapture &movie, s
 }
 
 // funkcja detekcji ruchu w materiale wideo, implementuje metody "Adaptive Gaussian Mixture Background Model" oraz odejmowanie kolejnych ramek
-void motion_detection_thread_auto(std::string path, std::map<std::string,double> parameters){
+void motion_detection_threads_auto(std::string path, std::map<std::string,double> parameters){
 	//odczyt parametrów
 	int frame_skip = parameters["frame_skip"]; 
 	int zeros_size = parameters["zeros_size"];
@@ -367,7 +338,7 @@ void motion_detection_thread_auto(std::string path, std::map<std::string,double>
 	std::cout<<"Saving completed\n";
 
 	//cv::destroyWindow("Motion");
-	//system("pause");
+	system("pause");
 }
 
 

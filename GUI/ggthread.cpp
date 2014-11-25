@@ -28,7 +28,7 @@ void GGthread::run(){
 
 
         qDebug() << "hello";
-       motion_detection_thread_auto(path,parametry);
+      motion_detection_threads_auto(path,parametry);
        qDebug() << "END";
 
 

@@ -20,6 +20,7 @@
 #include <opencv2\highgui\highgui.hpp>
 #include <cstringt.h>
 #include "ggthread.h"
+#include "ffthread.h"
 
 using namespace std;
 
@@ -70,9 +71,17 @@ public:
     GGthread* gthread;
     GGthread* gthredy[16];
 
-    //FFthread* fthread;
-    //FFthread* fthredy[16];
+    FFthread* fthread;
+    FFthread* fthredy[16];
 
+
+    QString videoPath;
+    QFileInfo video;
+
+    std::string path;
+    cv::VideoCapture capture;
+    cv::Mat frame;
+    QTimer* timer;
 
 
 
