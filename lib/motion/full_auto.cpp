@@ -199,7 +199,7 @@ void save_motion_full_auto(std::deque<int> &motion, cv::VideoCapture &movie, std
 	}
 
 	// tworzenie pliku logfile
-	log_file.open(directory_path + std::string("//") + std::string("log_file.txt"), std::ios::out );
+	log_file.open(temp_dir_path + std::string("//") + std::string("log_file.txt"), std::ios::out );
 	
 	movie.set(CV_CAP_PROP_POS_AVI_RATIO,0);
 
@@ -222,7 +222,7 @@ void save_motion_full_auto(std::deque<int> &motion, cv::VideoCapture &movie, std
 
 		// otwarcie nowego pliku wideo, zapis informacji do pliku z logami
 		video_name = std::string("video_") + std::to_string((long double)movies_count) + std::string(".avi");
-		video.open(directory_path + std::string("//") + video_name,CV_FOURCC('F','M','P','4'),fps, cv::Size(frame_width,frame_height),true);
+		video.open(temp_dir_path + std::string("//") + video_name,CV_FOURCC('F','M','P','4'),fps, cv::Size(frame_width,frame_height),true);
 
 		// zapis do pliku logfile informacji o bieżącym fragmencie
 		log_file << "No.: " << movies_count << "   Video Name: " << video_name << "   Motion Start Sec (Frame): " << std::floor((float)index/fps) << " (" << (index) << ")" << "   Motion End Sec (Frame): ";
