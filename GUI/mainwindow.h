@@ -11,7 +11,15 @@
 #include <QProgressBar>
 #include <QString>
 #include <QFileDialog>
-
+#include <QThread>
+#include <iostream>
+#include <windows.h>
+#include <opencv2\opencv.hpp>
+#include <opencv2\core\core.hpp>
+#include <opencv2\imgproc\imgproc.hpp>
+#include <opencv2\highgui\highgui.hpp>
+#include <cstringt.h>
+#include "ggthread.h"
 
 using namespace std;
 
@@ -42,6 +50,7 @@ public:
     double Mixtures;
     double Threads;
     double Metod;
+    double Save;
 
     bool okFramesSkip;
     bool okGapSize;
@@ -58,6 +67,12 @@ public:
 
     QString fileName;
     QString dir;
+    GGthread* gthread;
+    GGthread* gthredy[16];
+
+    //FFthread* fthread;
+    //FFthread* fthredy[16];
+
 
 
 
@@ -96,6 +111,15 @@ private slots:
     void clickMan1plus();
     void clickMan5minus();
     void clickMan1minus();
+
+    void clickMetoda1();
+    void clickMetoda2();
+
+    void updateImg();
+
+    //void callAuto1();
+    //void callAuto2();
+    //void callMan();
 
 
 

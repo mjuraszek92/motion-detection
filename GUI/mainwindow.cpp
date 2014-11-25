@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -11,6 +12,11 @@ MainWindow::MainWindow(QWidget *parent) :
     setDefPara();
     connectActions();
 }
+
+
+
+
+
 
 MainWindow::~MainWindow()
 {
@@ -52,8 +58,12 @@ void MainWindow::connectActions()
      connect(ui->man_1minus, SIGNAL(clicked()), this, SLOT(clickMan1minus()));
      connect(ui->man_play, SIGNAL(clicked()), this, SLOT(clickManplay()));
 
+     connect(ui->auto2_met1, SIGNAL(clicked()), this, SLOT(clickMetoda1()));
+     connect(ui->auto2_met2, SIGNAL(clicked()), this, SLOT(clickMetoda2()));
 
 
+
+     //connect(thread, SIGNAL(started()), thread, SLOT(callAuto2()));
 
 
 
@@ -82,6 +92,10 @@ void MainWindow::setDefaults(){
     ui->Name->setDisabled(true);
     ui->Status->setDisabled(true);
 
+    ui->auto2_sel_text2->hide();
+    ui->auto2_select2->hide();
+    ui->label_2->hide();
+
     QPalette sel = ui->auto2_sel_text1->palette();
 
     sel.setColor(QPalette::Disabled, QPalette::Text, sel.color(QPalette::Active, QPalette::Text));
@@ -98,21 +112,26 @@ void MainWindow::setDefaults(){
     ui->Name->setText("\n\n\n");
     ui->Status->setText("\n\n\n");
 
+    ui->zapis->hide();
+
+
+
 
 }
 
 void MainWindow::setDefPara(){
 
-    FramesSkip = 0;
-    GapSize = 10;
-    MotionLen = 10;
+    FramesSkip = 1;
+    GapSize = 60;
+    MotionLen = 30;
     BeforeMove = 30;
     AfterMove = 30;
-    Area = 0.005;
+    Area = 0.001;
     History = 100;
     Mixtures = 3;
     Threads = 1;
     Metod = 1;
+    Save = 0;
 
     ui->FrameSkip->setText(QString().number(FramesSkip));
     ui->GapSize->setText(QString().number(GapSize));
@@ -124,7 +143,14 @@ void MainWindow::setDefPara(){
     ui->Mixtures->setText(QString().number(Mixtures));
     ui->Threads->setText(QString().number(Threads));
 
-    ui->auto2_met1->toggle();
+    if (!ui->zapis1->isChecked()){
+        ui->zapis1->toggle();
+    }
+    if (!ui->auto2_met2->isChecked()){
+        ui->auto2_met2->toggle();
+        clickMetoda2();
+    }
+
 
 }
 
@@ -148,6 +174,7 @@ void MainWindow::clickTrybManu()
 {
     ui->label_6->setText("Tryb Manualny");
     ui->Auto2->show();
+    ui->zapis->show();
     tryb = 0;
 }
 
@@ -168,7 +195,7 @@ void MainWindow::clickAuto2back()
         setDefPara();
     }
 
-
+    ui->zapis->hide();
 
 }
 
@@ -186,9 +213,9 @@ void MainWindow::clickAuto2start()
     Threads = QString(ui->Threads->text()).toDouble(&okThreads);
 
     if(ui->auto2_met1->isChecked()){
-        Metod = 1;
+        Metod = 0;
     } else {
-        Metod = 2;
+        Metod = 1;
     }
 
 
@@ -212,6 +239,40 @@ void MainWindow::clickAuto2start()
                                                     runing = true;
                                                     ui->auto2_back->setDisabled(true);
 
+                                                    std::map<std::string,double> parametry;
+                                                        parametry["frame_skip"] = FramesSkip;
+                                                        parametry["zeros_size"] = GapSize;
+                                                        parametry["ones_size"] = MotionLen;
+                                                        parametry["befo_motion"] = BeforeMove;
+                                                        parametry["past_motion"] = AfterMove;
+                                                        parametry["area"] = Area;
+                                                        parametry["history"] = History;
+                                                        parametry["nmixtures"] = Mixtures;
+                                                        parametry["method"] = Metod;
+                                                        parametry["thread_no"] = 1;
+                                                        parametry["threads"] = Threads;
+                                                        //std::string path = "F://film2.avi";
+                                                        std::string path = fileName.toStdString();
+
+
+
+
+                                                        //thread = new GGthread(path,parametry);
+                                                        //thread->start();
+
+
+                                                        for (int i=0;i<parametry["threads"];i++){
+                                                            Sleep(50);
+                                                           gthredy[i] = new GGthread(path,parametry);
+                                                           gthredy[i]->start();
+                                                            parametry["thread_no"] = parametry["thread_no"] + 1;
+                                                        }
+
+
+
+
+
+
                                                 } else{
                                                     ui->auto2_start->setText("Start");
                                                     runing = false;
@@ -225,7 +286,24 @@ void MainWindow::clickAuto2start()
                                                     ui->Name->setText(ui->Name->toPlainText()+fileName+"\n");
                                                     ui->Status->setText(ui->Status->toPlainText()+"Trwa"+"\n");
 
-                                                    //run
+                                                    std::map<std::string,double> parametry;
+                                                        parametry["frame_skip"] = FramesSkip;
+                                                        parametry["zeros_size"] = GapSize;
+                                                        parametry["ones_size"] = MotionLen;
+                                                        parametry["befo_motion"] = BeforeMove;
+                                                        parametry["past_motion"] = AfterMove;
+                                                        parametry["area"] = Area;
+                                                        parametry["history"] = History;
+                                                        parametry["nmixtures"] = Mixtures;
+                                                        parametry["method"] = Metod;
+                                                        parametry["thread_no"] = 1;
+                                                        parametry["threads"] = Threads;
+                                                        std::string path = "F://film2.avi";
+
+                                                    //fthredy[nr-1] = new FFthread(path,parametry);
+                                                    //fthredy[nr-1]->start();
+
+
                                                 } else if(tryb==0){
                                                     ui->Auto2->hide();
                                                     ui->Man->show();
@@ -276,7 +354,20 @@ void MainWindow::clickAuto2sel1()
 {
      fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                     "/home",
-                                                    tr("All (*.*)"));
+                                                    tr("filmy (*.avi)"));
+
+     string tmp = fileName.toStdString();
+
+     //auto it = std::find(tmp.begin(), tmp.end(), '/');
+     //while (it != tmp.end()) {
+     //    auto it2 = tmp.insert(it, '/');
+
+         // skip over the slashes we just inserted
+     //    it = std::find(it2+1, tmp.end(), '/');
+    // }
+
+    fileName = QString::fromStdString(tmp);
+
     ui->auto2_sel_text1->setText(fileName);
 }
 
@@ -285,6 +376,11 @@ void MainWindow::clickAuto2sel2()
      dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
                                                      "/home",
                                                       QFileDialog::DontResolveSymlinks);
+
+
+
+
+
     ui->auto2_sel_text2->setText(dir);
 }
 
@@ -294,6 +390,7 @@ void MainWindow::clickAuto2sel2()
 void MainWindow::clickManback()
 {
     ui->Man->hide();
+    ui->zapis->hide();
 
 }
 
@@ -301,6 +398,16 @@ void MainWindow::clickMannext()
 {
     ui->Man->hide();
     ui->Auto2->show();
+
+
+
+}
+
+
+void MainWindow::updateImg(){
+
+
+
 
 }
 
@@ -365,6 +472,29 @@ void MainWindow::clickAuto2def(){
 
 }
 
+void MainWindow::clickMetoda1(){
+
+    ui->History->hide();
+    ui->Mixtures->hide();
+
+    ui->label_17->hide();
+    ui->label_18->hide();
+    ui->label_26->hide();
+    ui->label_27->hide();
+}
+
+void MainWindow::clickMetoda2(){
+
+    ui->History->show();
+    ui->Mixtures->show();
+
+    ui->label_17->show();
+    ui->label_18->show();
+    ui->label_26->show();
+    ui->label_27->show();
+
+}
+
 void MainWindow::on_actionAutorzy_triggered()
 {
     QMessageBox::about(this,"Autorzy","Paweł Brańka\nKamil Jamróz\nMateusz Juraszek\nMirosław Małek\nRafał Płonka\nMateusz Stanaszek\nDominik Wyroba");
@@ -374,6 +504,7 @@ void MainWindow::on_actionO_programie_triggered()
 {
     QMessageBox::about(this,"O programie","Bardzo dobry program służący do detekcji ruchu w filmach");
 }
+
 
 
 

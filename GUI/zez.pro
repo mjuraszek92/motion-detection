@@ -8,14 +8,21 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = lell
+TARGET = zez
 TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    ggthread.cpp
 
-HEADERS  += mainwindow.h
+
+
+
+
+
+HEADERS  += mainwindow.h \
+    ggthread.h
 
 FORMS    += mainwindow.ui
 
