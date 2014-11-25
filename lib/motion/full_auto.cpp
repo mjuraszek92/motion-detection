@@ -8,168 +8,9 @@
 #include <fstream>
 #include <ctime>
 
-// funkcja przetwarzająca wektor ruchu dostarczony przez algorytm detekcji zgodnie z parametrami użytkownika (celem usunięcia szumu, zakłóceń, łączenia framgnetów)
-void motion_processing(std::deque<int> &motion, int offset, int befo_motion, int past_motion, int ones_size, int zeros_size){
-	int median_sum;
-	int big_counter = offset;
-	int small_counter = 0;
-	int break_flag = 0;
-
-	// Filtracja medianowa wektora ruchu
-	for(int i=offset; i<motion.size()-offset-1; i++){
-		median_sum = 0;
-		for( int j=i-offset; j<=i+offset; j++ ){
-			median_sum+=motion[j];
-		}
-		if( median_sum > offset+0.5 ){
-			motion[i] = 1;
-		} else {
-			motion[i] = 0;
-		}
-	}
-
-	// Pętla usuwająca ruch trwający krócej niż zadana długość (prawdopodobny szum, zakłócenia)
-	while( true ){
-		small_counter = 0;
-
-		while( motion[big_counter] == 0 ){
-			++big_counter;
-			if( big_counter > motion.size()-offset-1 ){
-				break_flag = 1;
-				break;
-			}
-		}
-
-		if( break_flag == 1 ){
-			break;
-		}
-
-		while( motion[big_counter] == 1 ){
-			++small_counter;
-			++big_counter;
-		}
-
-		if( small_counter < ones_size ){
-			while( small_counter > 0 ){
-				motion[big_counter-small_counter] = 0;
-				--small_counter;
-			}
-		}
-	}
-
-	// Pętla scalająca fragmenty ruchu przedzielone niewielkimi (mniejszymi niż zadane) przerwami (zakłócenia)
-	big_counter = offset;
-	small_counter = 0;
-	break_flag = 0;
-
-	while( true ){
-		small_counter = 0;
-
-		while( motion[big_counter] == 1 ){
-			++big_counter;
-		}
-
-		while( motion[big_counter] == 0 ){
-			++small_counter;
-			++big_counter;
-			if( big_counter > motion.size() - offset - 1 ){
-				break_flag = 1;
-				break;
-			}
-		}
-
-		if( break_flag == 1 ){
-			break;
-		}
-
-		if( small_counter < zeros_size ){
-			while( small_counter > 0 ){
-				motion[big_counter-small_counter] = 1;
-				--small_counter;
-			}
-		}
-	}
-
-	// Usunięcie dodatkowego konteksu wykorzystywanego przez filtracje medianową
-	for(int i=0; i<offset; i++){
-		motion.pop_front();
-		motion.pop_back();
-	}
-	
-	// Pętla umożliwiająca zapisanie dodatkowych N ramek przed wystąpieniem ruchu oraz M ramek po jego wystąpnieniu
-	big_counter = 0;
-	small_counter = 0;
-	break_flag = 0;
-	while( true ){
-		while( motion[big_counter] == 0 ){
-			++big_counter;
-			if( big_counter >= motion.size() ){
-				break_flag = 1;
-				break;
-			}
-		}
-
-		if( break_flag == 1 ){
-			break;
-		}
-
-		
-		small_counter = 1;
-		while( (small_counter <= befo_motion) && ((signed int)big_counter-(signed int)small_counter > 0) ){
-			motion[big_counter-small_counter] = 1;
-			++small_counter;
-		}
-
-		while( motion[big_counter] == 1 ){
-			++big_counter;
-			if( big_counter >= motion.size() ){
-				break_flag = 1;
-				break;
-			}
-		}
-
-		if( break_flag == 1 ){
-			break;
-		}
-		
-		small_counter = 0;
-		while( (small_counter < past_motion) && (big_counter+small_counter < motion.size()) ){
-			motion[big_counter+small_counter] = 1;
-			++small_counter;
-		}
-
-		while( motion[big_counter] == 1 ){
-			++big_counter;
-			if( big_counter >= motion.size() ){
-				break_flag = 1;
-				break;
-			}
-		}
-
-		if( break_flag == 1 ){
-			break;
-		}
-	}
-}
-
-// funkcja odnajdująca pozycję znaku w napisie
-int find_char(std::string path, char c){
-	int position = 0;
-	for(int i=path.length()-1; i>=0; i--){
-		if( path[i] == c ){
-			position = i;
-			break;
-		}
-	}
-	return position+1;
-}
-
-// funkcja wyznaczjąca nazwę pliku bez rozszerzenia z pełnej ścieżki
-std::string find_filename(std::string path){
-	std::string file_name = path.substr(find_char(path,'/'),path.length());
-	file_name = file_name.substr(0,find_char(file_name,'.')-1);
-	return file_name;
-}
+extern void motion_processing(std::deque<int> &motion, int offset, int beforeMotion, int pastMotion, int onesSize, int zerosSize);
+extern int find_char(std::string path, char c);
+extern std::string find_filename(std::string path);
 
 // funkcja dokonująca zapisu fragmentów filmu zawierających ruch w oparciu o wektor ruchu
 void save_motion_full_auto(std::deque<int> &motion, cv::VideoCapture &movie, std::string path, double fps, int start, int thread_no){
@@ -470,11 +311,16 @@ int main(int argc, char *argv[])
 	parametry["area"] = 0.001;
 	parametry["history"] = 200;
 	parametry["nmixtures"] = 3;
-	parametry["method"] = 1;
+	parametry["method"] = 0;
 	parametry["thread_no"] = 1;
 	parametry["threads"] = 1;
-	std::string path = "G://Filmsy//MOV_0013.mp4";
-
+	std::string path = "G://Filmsy//test4.avi";
+	time_t rawtime;
+	time (&rawtime);
+	std::cout<<ctime (&rawtime)<<std::endl;
 	motion_detection_full_auto(path,parametry);
+	time (&rawtime);
+	std::cout<<ctime (&rawtime)<<std::endl;
+	system("pause");
 	return 0;
 }
