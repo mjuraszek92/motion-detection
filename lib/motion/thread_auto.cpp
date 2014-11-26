@@ -330,7 +330,7 @@ void motion_detection_threads_auto(std::string path, std::map<std::string,double
 	std::cout<<"Processing completed\n";
 	// wyznaczanie prawidłowej liczby fps
 	double fps = movie.get(CV_CAP_PROP_FPS);
-	if((movie.get(CV_CAP_PROP_FRAME_COUNT)/current_frame) > 1.2 ){
+	if((movie.get((CV_CAP_PROP_FRAME_COUNT)*((float)thread_no/(float)threads))/current_frame) > 1.2 ){
 		fps = fps/2;
 	}
 	// przekazanie wektora ruchu i filmu do funkcji zapisującej
