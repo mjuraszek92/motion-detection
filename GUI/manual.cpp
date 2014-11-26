@@ -1,3 +1,32 @@
+//Copyright (c) 2014, ZPI_PT_10_45
+//All rights reserved.
+
+//Redistribution and use in source and binary forms, with or without
+//modification, are permitted provided that the following conditions are met:
+//1. Redistributions of source code must retain the above copyright
+//   notice, this list of conditions and the following disclaimer.
+//2. Redistributions in binary form must reproduce the above copyright
+//   notice, this list of conditions and the following disclaimer in the
+//   documentation and/or other materials provided with the distribution.
+//3. All advertising materials mentioning features or use of this software
+//   must display the following acknowledgement:
+//   This product includes software developed by the ZPI_PT_10_45.
+//4. Neither the name of the ZPI_PT_10_45 nor the
+//   names of its contributors may be used to endorse or promote products
+//   derived from this software without specific prior written permission.
+
+//THIS SOFTWARE IS PROVIDED BY ZPI_PT_10_45 ''AS IS'' AND ANY
+//EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+//WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+//DISCLAIMED. IN NO EVENT SHALL ZPI_PT_10_45 BE LIABLE FOR ANY
+//DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+//(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+//LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+//ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
 #include <opencv2\opencv.hpp>
 #include <vector>
 #include <deque>
@@ -27,7 +56,7 @@ void moveFiveFramesLater(int &curFrame, std::deque<std::vector<uchar>> allFrames
 void stopVideo(bool &esc);
 void exitFromManualMode(bool &stop);
 void setMovieTime(std::deque<int> motion, std::deque<std::vector<uchar>> allFrames, double &momentFilmu, int &curFrame, int data_storage);
-void playVideo(std::deque<int> motion, std::deque<std::vector<uchar>> allFrames, bool &stop, bool &esc, int &curFrame, double &momentFilmu, char &k, int mSec, int data_storage);
+void playVideo(std::deque<int> motion, std::deque<std::vector<uchar>> allFrames, bool &stop, bool &esc, int &curFrame, double &momentFilmu, char &k, int mSec, int data_storage, cv::Mat &picToShow);
 void setBegining(int &begin, int curFrame);
 void setEnd(int &end, int curFrame);
 void moveToBegining(int &curFrame, int begin, std::deque<std::vector<uchar>> allFrames, int data_storage);
@@ -40,7 +69,7 @@ void setEndFromFrameNo(int &end, int frameNo, std::deque<int> motion);
 void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion, cv::VideoCapture &movie, int width, int height, int data_storage, int counter);
 
 
-void motion_detection(std::string path, std::map<std::string,double> parameters){
+void motion_detection(std::string path, std::map<std::string,double> parameters,std::deque<std::vector<uchar>> &allFrames, std::deque<int> &motion, cv::VideoCapture &movie, int &width, int &height, int &data_storage, int &counter){
         //odczyt parametrów
     int frame_skip = parameters["frame_skip"];
     int zeros_size = parameters["zeros_size"];
@@ -53,21 +82,20 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
     int nmixtures = parameters["nmixtures"];
     int method = parameters["method"];
     int thread = parameters["thread"];
-	int data_storage = parameters["data_storage"];
+    data_storage = parameters["data_storage"];
  
     cv::Mat frame;
 	cv::Mat fore;
-    cv::VideoCapture movie;
+
     cv::Mat element = cv::getStructuringElement(0, cv::Size(5,5));
 	cv::BackgroundSubtractorMOG2 bg;
 
 	//zmienne do zapisywania na dysk
-	int counter = 0;
+    counter = 0;
 	std::string pic_name;
 	cv::Mat src;
 
-	// zmienne do przechowywania w RAMie
-	std::deque<std::vector<uchar>> allFrames;
+    // zmienne do przechowywania w RAMie
 	std::vector<uchar> buff; 
 	std::vector<int> param = std::vector<int>(2);
     param[0] = CV_IMWRITE_JPEG_QUALITY;
@@ -96,21 +124,21 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
 	
 	movie.set(CV_CAP_PROP_POS_AVI_RATIO,0);
 
-    int height = movie.get(CV_CAP_PROP_FRAME_HEIGHT);
-    int width = movie.get(CV_CAP_PROP_FRAME_WIDTH);
+    height = movie.get(CV_CAP_PROP_FRAME_HEIGHT);
+    width = movie.get(CV_CAP_PROP_FRAME_WIDTH);
     int area = height*width;
     int flag = 0;
     int perimeter = 100;
  
     // główny wektor ruchu
-    std::deque<int> motion;
+
 	
     // tworzenie kontekstu dla filtracji medianowej
     for(int i=0; i<offset; i++){
             motion.push_back(0);
     }
  
-    cv::namedWindow("Motion");
+    //cv::namedWindow("Motion");
     if( method == 1 ){ // metoda mieszanin gaussowskich
             // pętla odczytująca i przetwarzająca kolejne ramki
             while( true ){
@@ -124,7 +152,7 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
 						if (!imwrite(pic_name,frame))
 						{
 							std::cout << "Nie udalo sie" << std::endl;
-							system("pause");
+                            //system("pause");
 						}
 						counter++;
 					}
@@ -156,8 +184,8 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
                        
                     // opcjonalne wyświetlanie ramki z zaznaczonym ruchem
                     cv::drawContours(frame,tmp,-1,cv::Scalar(0,0,255),2);
-                    cv::imshow("Motion",frame);
-                    if(cv::waitKey(1) >= 5) break;
+                    //cv::imshow("Motion",frame);
+                    //if(cv::waitKey(1) >= 5) break;
  
                     motion.push_back(flag);
                     tmp.clear();
@@ -330,8 +358,8 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
 			}
             cvtColor(frame_0, frame_0, CV_BGR2GRAY);
             //opcjonalne wyświetlanie
-            cv::imshow("Motion",frame);
-            if(cv::waitKey(1) >= 10) break;
+            //cv::imshow("Motion",frame);
+            //if(cv::waitKey(1) >= 10) break;
  
             // wyznaczenie pola obiektu
             int pixel_sum = 0;
@@ -383,11 +411,12 @@ void motion_detection(std::string path, std::map<std::string,double> parameters)
 	motion_processing(motion,offset,befo_motion,past_motion,ones_size,zeros_size);
 
 	// TRYB MANUALNY
-	manualMode(allFrames, motion, movie, width, height, data_storage, counter);
+    //manualMode(allFrames, motion, movie, width, height, data_storage, counter);
 
-	cv::destroyWindow("Motion");
+    //cv::destroyWindow("Motion");
 }
  
+
 
 // Funkcje do manuala
 
@@ -409,7 +438,7 @@ void moveOneFrameEarlier(int &curFrame, std::deque<std::vector<uchar>> allFrames
 		picToShow = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
 	}
 
-	cv::imshow("Motion",picToShow);
+    //cv::imshow("Motion",picToShow);
 }
 
 void moveFiveFramesEarlier(int &curFrame, std::deque<std::vector<uchar>> allFrames, int data_storage)
@@ -430,7 +459,7 @@ void moveFiveFramesEarlier(int &curFrame, std::deque<std::vector<uchar>> allFram
 		picToShow = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
 	}
 
-	cv::imshow("Motion",picToShow);
+    //cv::imshow("Motion",picToShow);
 }
 
 void moveOneFrameLater(int &curFrame, std::deque<std::vector<uchar>> allFrames, std::deque<int> motion, int data_storage)
@@ -451,7 +480,7 @@ void moveOneFrameLater(int &curFrame, std::deque<std::vector<uchar>> allFrames, 
 		picToShow = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
 	}
 
-	cv::imshow("Motion",picToShow);
+    //cv::imshow("Motion",picToShow);
 }
 
 void moveFiveFramesLater(int &curFrame, std::deque<std::vector<uchar>> allFrames, std::deque<int> motion, int data_storage)
@@ -472,7 +501,7 @@ void moveFiveFramesLater(int &curFrame, std::deque<std::vector<uchar>> allFrames
 		picToShow = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
 	}
 
-	cv::imshow("Motion",picToShow);
+    //cv::imshow("Motion",picToShow);
 }
 
 void stopVideo(bool &stop)
@@ -502,12 +531,12 @@ void setMovieTime(std::deque<int> motion, std::deque<std::vector<uchar>> allFram
 		picToShow = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
 	}
 
-	cv::imshow("Motion",picToShow);
+    //cv::imshow("Motion",picToShow);
 }
 
-void playVideo(std::deque<int> motion, std::deque<std::vector<uchar>> allFrames, bool &stop, bool &esc, int &curFrame, double &momentFilmu, char &k, int mSec, int data_storage)
+void playVideo(std::deque<int> motion, std::deque<std::vector<uchar>> allFrames, bool &stop, bool &esc, int &curFrame, double &momentFilmu, char &k, int mSec, int data_storage, cv::Mat &picToShow)
 {
-	cv::Mat picToShow;
+    //cv::Mat picToShow;
 	for (int i=curFrame; i<motion.size(); i++)
 	{
 
@@ -521,23 +550,23 @@ void playVideo(std::deque<int> motion, std::deque<std::vector<uchar>> allFrames,
 			picToShow = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
 		}
 
-		cv::imshow("Motion",picToShow);
+        //cv::imshow("Motion",picToShow);
 
 		curFrame=i;
 		stop = false;
-		k = cv::waitKey(mSec);
-		if (k=='s') // stop odtwarzania
-		{
-			stopVideo(stop);
-		}
-		else if ((int)k==27) //ESC - wyjście
-		{
-			exitFromManualMode(esc);
-		}
-		else if (k=='x') //Wybór momentu filmu - docelowo suwaczek - teraz double [0;1]
-		{
-			setMovieTime(motion, allFrames, momentFilmu, curFrame, data_storage);
-		}
+//		k = cv::waitKey(mSec);
+//		if (k=='s') // stop odtwarzania
+//		{
+//			stopVideo(stop);
+//		}
+//		else if ((int)k==27) //ESC - wyjście
+//		{
+//			exitFromManualMode(esc);
+//		}
+//		else if (k=='x') //Wybór momentu filmu - docelowo suwaczek - teraz double [0;1]
+//		{
+//			setMovieTime(motion, allFrames, momentFilmu, curFrame, data_storage);
+//		}
 
 		i = curFrame;
 		std::cout << curFrame << std::endl; 
@@ -570,7 +599,7 @@ void moveToBegining(int &curFrame, int begin, std::deque<std::vector<uchar>> all
 		picToShow = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
 	}
 
-	cv::imshow("Motion",picToShow);
+    cv::imshow("Motion",picToShow);
 }
 
 void moveToEnd(int &curFrame, int end, std::deque<std::vector<uchar>> allFrames, int data_storage)
@@ -587,7 +616,7 @@ void moveToEnd(int &curFrame, int end, std::deque<std::vector<uchar>> allFrames,
 		picToShow = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
 	}
 
-	cv::imshow("Motion",picToShow);
+    cv::imshow("Motion",picToShow);
 }
 
 void takeNextFragment(int &curFragment, int &begin, int &end, std::vector<movieFragment> fragmentList, int &curFrame)
@@ -753,110 +782,110 @@ void manualMode(std::deque<std::vector<uchar>> allFrames, std::deque<int> motion
 	double momentFilmu;
 
 
-	while (true)
-	{
-		k = cv::waitKey(10000);
+//	while (true)
+//	{
+//		k = cv::waitKey(10000);
 		
-		if (k=='p') // odtwarzanie - button "odtwarzaj"
-		{
-			playVideo(motion, allFrames, stop, esc, curFrame, momentFilmu, k, mSec, data_storage);
-		}
+//		if (k=='p') // odtwarzanie - button "odtwarzaj"
+//		{
+//			playVideo(motion, allFrames, stop, esc, curFrame, momentFilmu, k, mSec, data_storage);
+//		}
 		
-		////
-		else if (k=='b') // -1 ramka, button "-1 ramka"
-		{
-			moveOneFrameEarlier(curFrame, allFrames, data_storage);
-		}
-		
-		
-		else if (k=='v') // -5 ramek, button "-5 ramek"
-		{
-			moveFiveFramesEarlier(curFrame, allFrames, data_storage);
-		}
+//		////
+//		else if (k=='b') // -1 ramka, button "-1 ramka"
+//		{
+//			moveOneFrameEarlier(curFrame, allFrames, data_storage);
+//		}
 		
 		
-		else if (k=='n') // + 1 ramka, button "+1 ramka"
-		{
-			moveOneFrameLater(curFrame, allFrames, motion, data_storage);
-		}
+//		else if (k=='v') // -5 ramek, button "-5 ramek"
+//		{
+//			moveFiveFramesEarlier(curFrame, allFrames, data_storage);
+//		}
 		
 		
-		else if (k=='m') // + 5 ramek, button "+5 ramek"
-		{
-			moveFiveFramesLater(curFrame, allFrames, motion, data_storage);
-		}
+//		else if (k=='n') // + 1 ramka, button "+1 ramka"
+//		{
+//			moveOneFrameLater(curFrame, allFrames, motion, data_storage);
+//		}
 		
 		
-		else if (k=='w') // ustaw aktualną ramkę jako początek fragmentu, button "Ustaw początek"
-		{
-			setBegining(begin, curFrame);
-		}
+//		else if (k=='m') // + 5 ramek, button "+5 ramek"
+//		{
+//			moveFiveFramesLater(curFrame, allFrames, motion, data_storage);
+//		}
+		
+		
+//		else if (k=='w') // ustaw aktualną ramkę jako początek fragmentu, button "Ustaw początek"
+//		{
+//			setBegining(begin, curFrame);
+//		}
 
 
-		else if (k=='e') // ustaw aktualną ramkę jako koniec fragmentu, button "Ustaw koniec"
-		{
-			setEnd(end, curFrame);
-		}
+//		else if (k=='e') // ustaw aktualną ramkę jako koniec fragmentu, button "Ustaw koniec"
+//		{
+//			setEnd(end, curFrame);
+//		}
 
 
-		else if (k=='r') // przesuń na początek fragmentu, button "Przesuń na początek"
-		{
-			moveToBegining(curFrame, begin, allFrames, data_storage);
-		}
+//		else if (k=='r') // przesuń na początek fragmentu, button "Przesuń na początek"
+//		{
+//			moveToBegining(curFrame, begin, allFrames, data_storage);
+//		}
 
 
-		else if (k=='t') // przesuń na koniec fragmentu, button "Przesuń na koniec"
-		{
-			moveToEnd(curFrame, end, allFrames, data_storage);
-		}
+//		else if (k=='t') // przesuń na koniec fragmentu, button "Przesuń na koniec"
+//		{
+//			moveToEnd(curFrame, end, allFrames, data_storage);
+//		}
 
 
-		else if (k=='y') // weź poprzedni fragment, button "Weź poprzedni fragment"
-		{
-			takePreviousFragment(curFragment, begin, end, fragmentList, curFrame);
-		}
+//		else if (k=='y') // weź poprzedni fragment, button "Weź poprzedni fragment"
+//		{
+//			takePreviousFragment(curFragment, begin, end, fragmentList, curFrame);
+//		}
 
 
-		else if (k=='u') // weź następny fragment, button "Weź następny fragment"
-		{
-			takeNextFragment(curFragment, begin, end, fragmentList, curFrame);
-		}
+//		else if (k=='u') // weź następny fragment, button "Weź następny fragment"
+//		{
+//			takeNextFragment(curFragment, begin, end, fragmentList, curFrame);
+//		}
 
 
-		else if (k=='x') // Wybór momentu filmu - docelowo suwaczek - teraz double [0;1]
-		{
-			setMovieTime(motion, allFrames, momentFilmu, curFrame, data_storage);
-		}
+//		else if (k=='x') // Wybór momentu filmu - docelowo suwaczek - teraz double [0;1]
+//		{
+//			setMovieTime(motion, allFrames, momentFilmu, curFrame, data_storage);
+//		}
 
-		else if (k=='i') // zapis fragmentu filmu do pliku, button "Zapisz"
-		{
-			saveVideoToFile(video, fragmentList, curFragment, curFrame, begin, end, fps, width, height, allFrames, data_storage);
-		}
+//		else if (k=='i') // zapis fragmentu filmu do pliku, button "Zapisz"
+//		{
+//			saveVideoToFile(video, fragmentList, curFragment, curFrame, begin, end, fps, width, height, allFrames, data_storage);
+//		}
 
-		else if (k=='[') // ustawienie liczby z textfielda jako początek fragmentu, button "Ustaw", przed textfieldem najlepiej jakaś labelka "Początek"
-		{
-			std::cout << "Podaj poczatek fragmentu" << std::endl;
-			std::cin >> frameNo;
-			setBeginFromFrameNo(begin, frameNo, motion);
-		}
+//		else if (k=='[') // ustawienie liczby z textfielda jako początek fragmentu, button "Ustaw", przed textfieldem najlepiej jakaś labelka "Początek"
+//		{
+//			std::cout << "Podaj poczatek fragmentu" << std::endl;
+//			std::cin >> frameNo;
+//			setBeginFromFrameNo(begin, frameNo, motion);
+//		}
 
-		else if (k==']') // ustawienie liczby z textfielda jako koniec fragmentu, button "Ustaw", przed textfieldem najlepiej jakaś labelka "Koniec"
-		{
-			std::cout << "Podaj koniec fragmentu" << std::endl;
-			std::cin >> frameNo;
-			setEndFromFrameNo(end, frameNo, motion);
-		}
+//		else if (k==']') // ustawienie liczby z textfielda jako koniec fragmentu, button "Ustaw", przed textfieldem najlepiej jakaś labelka "Koniec"
+//		{
+//			std::cout << "Podaj koniec fragmentu" << std::endl;
+//			std::cin >> frameNo;
+//			setEndFromFrameNo(end, frameNo, motion);
+//		}
 
-		else if ((int)k==27) //ESC - wyjście, button "Zakończ"
-		{
-			exitFromManualMode(esc);
-		}
+//		else if ((int)k==27) //ESC - wyjście, button "Zakończ"
+//		{
+//			exitFromManualMode(esc);
+//		}
 
-		std::cout << curFrame << std::endl; // wyświetlanie aktualnej ramki po każdej akcji - dobre do sprawdzenia poprawności :)
-		if (esc == true)
-			break;
+//		std::cout << curFrame << std::endl; // wyświetlanie aktualnej ramki po każdej akcji - dobre do sprawdzenia poprawności :)
+//		if (esc == true)
+//			break;
 	
-	}
+//	}
 
 	std::cout << std::endl;
 	for (int i=0; i<fragmentList.size(); i++)

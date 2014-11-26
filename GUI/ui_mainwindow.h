@@ -337,7 +337,7 @@ public:
         man_1minus->setGeometry(QRect(200, 500, 31, 23));
         label_22 = new QLabel(Man);
         label_22->setObjectName(QStringLiteral("label_22"));
-        label_22->setGeometry(QRect(20, 140, 501, 331));
+        label_22->setGeometry(QRect(40, 60, 501, 401));
         Auto1 = new QWidget(centralWidget);
         Auto1->setObjectName(QStringLiteral("Auto1"));
         Auto1->setGeometry(QRect(0, 0, 861, 601));
@@ -483,7 +483,7 @@ public:
         man_5minus->setText(QApplication::translate("MainWindow", "-5", 0));
         man_1plus->setText(QApplication::translate("MainWindow", "+1", 0));
         man_1minus->setText(QApplication::translate("MainWindow", "-1", 0));
-        label_22->setText(QApplication::translate("MainWindow", "TextLabel", 0));
+        label_22->setText(QString());
         label_10->setText(QApplication::translate("MainWindow", "Tryb Automatyczny", 0));
         auto1_back->setText(QApplication::translate("MainWindow", "Wstecz", 0));
         auto1_add->setText(QApplication::translate("MainWindow", "Dodaj", 0));

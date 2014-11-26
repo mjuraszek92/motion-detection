@@ -13,10 +13,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
+    manual.cpp \
+    mainwindow.cpp \
     ggthread.cpp \
     common.cpp \
-    manual.cpp \
     full_auto.cpp \
     thread_auto.cpp \
     ffthread.cpp

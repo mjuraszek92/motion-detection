@@ -1,7 +1,50 @@
+//Copyright (c) 2014, ZPI_PT_10_45
+//All rights reserved.
+
+//Redistribution and use in source and binary forms, with or without
+//modification, are permitted provided that the following conditions are met:
+//1. Redistributions of source code must retain the above copyright
+//   notice, this list of conditions and the following disclaimer.
+//2. Redistributions in binary form must reproduce the above copyright
+//   notice, this list of conditions and the following disclaimer in the
+//   documentation and/or other materials provided with the distribution.
+//3. All advertising materials mentioning features or use of this software
+//   must display the following acknowledgement:
+//   This product includes software developed by the ZPI_PT_10_45.
+//4. Neither the name of the ZPI_PT_10_45 nor the
+//   names of its contributors may be used to endorse or promote products
+//   derived from this software without specific prior written permission.
+
+//THIS SOFTWARE IS PROVIDED BY ZPI_PT_10_45 ''AS IS'' AND ANY
+//EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+//WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+//DISCLAIMED. IN NO EVENT SHALL ZPI_PT_10_45 BE LIABLE FOR ANY
+//DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+//(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+//LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+//ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 
+
+
+
+
+
+extern void motion_processing(std::deque<int> &motion, int offset, int beforeMotion, int pastMotion, int onesSize, int zerosSize);
+extern int find_char(std::string path, char c);
+extern std::string find_filename(std::string path);
+
+//struct movieFragment {
+//    int begin;
+//    int end;
+//    std::string name;
+//};
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -28,6 +71,14 @@ void MainWindow::on_actionExit_triggered()
     exit(0);
 
 }
+
+
+
+
+
+
+
+
 
 void MainWindow::connectActions()
 {
@@ -61,10 +112,14 @@ void MainWindow::connectActions()
      connect(ui->auto2_met1, SIGNAL(clicked()), this, SLOT(clickMetoda1()));
      connect(ui->auto2_met2, SIGNAL(clicked()), this, SLOT(clickMetoda2()));
 
+     connect(ui->horizontalSlider, SIGNAL(sliderMoved(int)), this, SLOT(slider()));
+
      timer = new QTimer(this);
      connect(timer,SIGNAL(timeout()),this,SLOT(updateImg()));
 
-     //connect(thread, SIGNAL(started()), thread, SLOT(callAuto2()));
+
+
+
 
 
 
@@ -134,6 +189,9 @@ void MainWindow::setDefPara(){
     Metod = 1;
     Save = 0;
 
+    watkiz = 0;
+    res.create(240*3/2,320*3/2,CV_8UC1);
+
     ui->FrameSkip->setText(QString().number(FramesSkip));
     ui->GapSize->setText(QString().number(GapSize));
     ui->MotionLen->setText(QString().number(MotionLen));
@@ -153,7 +211,23 @@ void MainWindow::setDefPara(){
     }
 
 
+
+
+
+
+
 }
+
+
+
+
+// Funkcje do manuala
+
+
+
+
+
+
 
 void MainWindow::clickTrybAuto1()
 {
@@ -232,6 +306,9 @@ void MainWindow::clickAuto2start()
                                 if(okHistory && History>=10 && History<=500){
                                     if(okMixtures && Mixtures>=1 && Mixtures<=10){
                                         if(okThreads && Threads>=1){
+                                            path = fileName.toStdString();
+                                            if(path.compare("")!=0){
+
 
 
                                             if(tryb==2){
@@ -253,7 +330,7 @@ void MainWindow::clickAuto2start()
                                                         parametry["thread_no"] = 1;
                                                         parametry["threads"] = Threads;
                                                         //std::string path = "F://film2.avi";
-                                                        std::string path = fileName.toStdString();
+                                                        path = fileName.toStdString();
 
 
 
@@ -263,8 +340,9 @@ void MainWindow::clickAuto2start()
 
 
                                                         for (int i=0;i<parametry["threads"];i++){
-                                                            Sleep(50);
+                                                            Sleep(100);
                                                            gthredy[i] = new GGthread(path,parametry);
+                                                           connect(gthredy[i], SIGNAL(finished()), this, SLOT(sprawdz()));
                                                            gthredy[i]->start();
                                                             parametry["thread_no"] = parametry["thread_no"] + 1;
                                                         }
@@ -278,6 +356,12 @@ void MainWindow::clickAuto2start()
                                                     ui->auto2_start->setText("Start");
                                                     runing = false;
                                                     ui->auto2_back->setDisabled(false);
+                                                    for (int i=0;i<Threads;i++){
+
+                                                       gthredy[i]->stop();
+                                                        gthredy[i]->terminate();
+                                                       qDebug("kill");
+                                                    }
 
                                                 }
                                             } else if(tryb==1){
@@ -299,24 +383,121 @@ void MainWindow::clickAuto2start()
                                                         parametry["method"] = Metod;
                                                         parametry["thread_no"] = 1;
                                                         parametry["threads"] = Threads;
-                                                        std::string path = "F://film2.avi";
+                                                        //std::string path = "F://film2.avi";
 
                                                     fthredy[nr-1] = new FFthread(path,parametry);
                                                     fthredy[nr-1]->start();
+
+                                                        twatki[nr-1]=true;
+
+
+
 
 
                                                 } else if(tryb==0){
                                                     ui->Auto2->hide();
                                                     ui->Man->show();
 
-                                                    videoPath = QString::fromStdString("F://film2.avi");
-                                                    video.setFile(fileName);
+
+                                                    std::map<std::string,double> parametry;
+                                                        parametry["frame_skip"] = FramesSkip;
+                                                        parametry["zeros_size"] = GapSize;
+                                                        parametry["ones_size"] = MotionLen;
+                                                        parametry["befo_motion"] = BeforeMove;
+                                                        parametry["past_motion"] = AfterMove;
+                                                        parametry["area"] = Area;
+                                                        parametry["history"] = History;
+                                                        parametry["nmixtures"] = Mixtures;
+                                                        parametry["method"] = Metod;
+                                                        parametry["thread_no"] = 1;
+                                                        parametry["threads"] = Threads;
+                                                        //path = fileName.toStdString();
+
+
+                                                    videoPath = QString::fromStdString(path);
+                                                    video.setFile(videoPath);
                                                     if(video.exists()){
-                                                    path = fileName.toUtf8().constData();
-                                                    capture.open(path);
+                                                    path = videoPath.toUtf8().constData();
+                                                    movie.open(path);
 
 
-                                                    if(!capture.isOpened()){
+                                                    //motion_detection(path,parametry);
+
+//                                                    std::vector<movieFragment> fragmentList;
+//                                                    movies_count = 0;
+//                                                    break_flag = 0;
+//                                                    index = 0;
+
+
+//                                                    // Dodawanie do listy informacji na temat wszystkich fragmentów z ruchem (początek, koniec, nazwa filmu)
+
+//                                                    while( true )
+//                                                    {
+//                                                        movieFragment movieData;
+//                                                        ++movies_count;
+//                                                        while( motion[index] == 0 )
+//                                                        {
+//                                                            ++index;
+//                                                            if( index == motion.size() )
+//                                                            {
+//                                                                break_flag = 1;
+//                                                                break;
+//                                                            }
+//                                                        }
+//                                                        if( break_flag )
+//                                                        {
+//                                                            break;
+//                                                        }
+
+//                                                        movieData.begin = index;
+//                                                        video_name = std::string("video_") + std::to_string((long double)movies_count) + std::string(".avi");
+//                                                        movieData.name = video_name;
+
+//                                                        while( motion[index] == 1 )
+//                                                        {
+//                                                            ++index;
+//                                                            if( index == motion.size() )
+//                                                            {
+//                                                                break_flag = 1;
+//                                                                break;
+//                                                            }
+//                                                        }
+//                                                        movieData.end = index - 1;
+//                                                        if( break_flag)
+//                                                        {
+//                                                            break;
+//                                                        }
+//                                                        fragmentList.push_back(movieData);
+
+//                                                    }
+
+
+
+//                                                    fps = movie.get(CV_CAP_PROP_FPS);
+
+//                                                    if (allFrames.size()>counter)
+//                                                        maxFrame = allFrames.size();
+//                                                    else
+//                                                        maxFrame = counter;
+
+//                                                    if((movie.get(CV_CAP_PROP_FRAME_COUNT)/maxFrame) > 1.2 )
+//                                                    {
+//                                                        fps = fps/2;
+//                                                    }
+
+
+//                                                    mSec = (int)(1000/fps);
+//                                                    curFragment = 0;
+//                                                    curFrame = fragmentList[0].begin;
+//                                                    begin = fragmentList[0].begin;
+//                                                    end = fragmentList[0].end;
+//                                                    stop = false;
+//                                                    esc = false;
+
+
+                                                    qDebug("DONE!");
+
+                                                    if(!movie.isOpened()){
                                                                qDebug() << "Error, video not loaded";
                                                     }
                                                     }
@@ -337,7 +518,9 @@ void MainWindow::clickAuto2start()
 
 
 
-
+                                            } else {
+                                                ErrorBox.critical(0, "Brak pliku","Wybierz plik");
+                                            }
 
                                         } else {
                                             ErrorBox.critical(0, "Błedny parametr","Błędny parametr Threads");
@@ -431,8 +614,10 @@ void MainWindow::clickMannext()
 
 void MainWindow::updateImg(){
 
-   capture.read(frame);
 
+   movie.read(frame);
+    cv::resize(frame,frame,res.size());
+   //qDebug() << frame.rows;
    if (frame.empty()==true){
        return;
    }
@@ -482,17 +667,17 @@ void MainWindow::clickManplay(){
 //    video.setFile(fileName);
 //    if(video.exists()){
 //        path = videoPath.toUtf8().constData();
-//        capture.open(path);
+//        movie.open(path);
 
 
-//        if(!capture.isOpened()){
+//        if(!movie.isOpened()){
 //            qDebug() << "Error, video not loaded";
 //        }
 
 //        cv::namedWindow("window",1);
 //        while(true)
 //        {
-//            bool success = capture.read(frame);
+//            bool success = movie.read(frame);
 //                        if(success == false){
 //                            break;
 //                        }
@@ -567,6 +752,58 @@ void MainWindow::clickMetoda2(){
     ui->label_18->show();
     ui->label_26->show();
     ui->label_27->show();
+
+}
+
+void MainWindow::slider(){
+
+    //ui->man_save->setText(QString::number(ui->horizontalSlider->value()));
+
+}
+
+void MainWindow::sprawdz(){
+
+    watkiz++;
+    if(watkiz==Threads){
+
+        if(runing==true){
+        QMessageBox msgBox;
+        msgBox.setWindowTitle("Koniec");
+        msgBox.setText("Zakończono sukcesem!");
+        msgBox.exec();
+        ui->auto2_start->setText("Start");
+        runing = false;
+        ui->auto2_back->setDisabled(false);
+        qDebug("DONE!");
+        }
+        watkiz=0;
+    }
+
+}
+
+
+void MainWindow::isdone1(){
+
+
+
+
+}
+
+void MainWindow::isdone2(){
+
+
+
+}
+
+void MainWindow::isdone3(){
+
+
+
+}
+
+void MainWindow::isdone4(){
+
+
 
 }
 
