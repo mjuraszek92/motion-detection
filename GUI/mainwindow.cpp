@@ -142,7 +142,8 @@ void MainWindow::setDefaults(){
     ui->Man->setAutoFillBackground(true);
     ui->Man->hide();
     nr = 0;
-    ui->auto2_sel_text1->setDisabled(true);
+    //ui->auto2_sel_text1->setDisabled(true);
+    ui->auto2_sel_text1->setText("F:/film2.avi");
     ui->auto2_sel_text2->setDisabled(true);
     ui->Lp->setDisabled(true);
     ui->Name->setDisabled(true);
@@ -286,6 +287,8 @@ void MainWindow::clickAuto2start()
     History = QString(ui->History->text()).toDouble(&okHistory);
     Mixtures = QString(ui->Mixtures->text()).toDouble(&okMixtures);
     Threads = QString(ui->Threads->text()).toDouble(&okThreads);
+    path = ui->auto2_sel_text1->text().toStdString();
+
 
     if(ui->auto2_met1->isChecked()){
         Metod = 0;
@@ -306,16 +309,15 @@ void MainWindow::clickAuto2start()
                                 if(okHistory && History>=10 && History<=500){
                                     if(okMixtures && Mixtures>=1 && Mixtures<=10){
                                         if(okThreads && Threads>=1){
-                                            path = fileName.toStdString();
+                                            //path = fileName.toStdString();
+
                                             if(path.compare("")!=0){
 
 
 
                                             if(tryb==2){
                                                 if (!runing){
-                                                    ui->auto2_start->setText("Przerwij");
-                                                    runing = true;
-                                                    ui->auto2_back->setDisabled(true);
+
 
                                                     std::map<std::string,double> parametry;
                                                         parametry["frame_skip"] = FramesSkip;
@@ -330,9 +332,26 @@ void MainWindow::clickAuto2start()
                                                         parametry["thread_no"] = 1;
                                                         parametry["threads"] = Threads;
                                                         //std::string path = "F://film2.avi";
-                                                        path = fileName.toStdString();
+                                                        //path = fileName.toStdString();
 
 
+
+                                                        videoPath = QString::fromStdString(path);
+                                                        video.setFile(videoPath);
+                                                        if(video.exists()){
+                                                        path = videoPath.toUtf8().constData();
+                                                        movie.open(path);
+
+
+                                                        qDebug("DONE!");
+
+                                                        if(!movie.isOpened()){
+                                                                   qDebug() << "Error, video not loaded";
+                                                        }
+                                                         else {
+                                                            ui->auto2_start->setText("Przerwij");
+                                                            runing = true;
+                                                            ui->auto2_back->setDisabled(true);
 
 
                                                         //thread = new GGthread(path,parametry);
@@ -345,6 +364,10 @@ void MainWindow::clickAuto2start()
                                                            connect(gthredy[i], SIGNAL(finished()), this, SLOT(sprawdz()));
                                                            gthredy[i]->start();
                                                             parametry["thread_no"] = parametry["thread_no"] + 1;
+                                                        }
+                                                }
+                                                        } else {
+                                                            qDebug() << "Error, video not loaded";
                                                         }
 
 
@@ -421,80 +444,6 @@ void MainWindow::clickAuto2start()
                                                     movie.open(path);
 
 
-                                                    //motion_detection(path,parametry);
-
-//                                                    std::vector<movieFragment> fragmentList;
-//                                                    movies_count = 0;
-//                                                    break_flag = 0;
-//                                                    index = 0;
-
-
-//                                                    // Dodawanie do listy informacji na temat wszystkich fragmentów z ruchem (początek, koniec, nazwa filmu)
-
-//                                                    while( true )
-//                                                    {
-//                                                        movieFragment movieData;
-//                                                        ++movies_count;
-//                                                        while( motion[index] == 0 )
-//                                                        {
-//                                                            ++index;
-//                                                            if( index == motion.size() )
-//                                                            {
-//                                                                break_flag = 1;
-//                                                                break;
-//                                                            }
-//                                                        }
-//                                                        if( break_flag )
-//                                                        {
-//                                                            break;
-//                                                        }
-
-//                                                        movieData.begin = index;
-//                                                        video_name = std::string("video_") + std::to_string((long double)movies_count) + std::string(".avi");
-//                                                        movieData.name = video_name;
-
-//                                                        while( motion[index] == 1 )
-//                                                        {
-//                                                            ++index;
-//                                                            if( index == motion.size() )
-//                                                            {
-//                                                                break_flag = 1;
-//                                                                break;
-//                                                            }
-//                                                        }
-//                                                        movieData.end = index - 1;
-//                                                        if( break_flag)
-//                                                        {
-//                                                            break;
-//                                                        }
-//                                                        fragmentList.push_back(movieData);
-
-//                                                    }
-
-
-
-//                                                    fps = movie.get(CV_CAP_PROP_FPS);
-
-//                                                    if (allFrames.size()>counter)
-//                                                        maxFrame = allFrames.size();
-//                                                    else
-//                                                        maxFrame = counter;
-
-//                                                    if((movie.get(CV_CAP_PROP_FRAME_COUNT)/maxFrame) > 1.2 )
-//                                                    {
-//                                                        fps = fps/2;
-//                                                    }
-
-
-//                                                    mSec = (int)(1000/fps);
-//                                                    curFragment = 0;
-//                                                    curFrame = fragmentList[0].begin;
-//                                                    begin = fragmentList[0].begin;
-//                                                    end = fragmentList[0].end;
-//                                                    stop = false;
-//                                                    esc = false;
-
-
                                                     qDebug("DONE!");
 
                                                     if(!movie.isOpened()){
@@ -561,10 +510,13 @@ void MainWindow::clickAuto2start()
 void MainWindow::clickAuto2sel1()
 {
      fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
-                                                    "/home",
+                                                    "C:/",
                                                     tr("filmy (*.avi)"));
 
-     string tmp = fileName.toStdString();
+
+
+
+     //string tmp = fileName.toStdString();
 
      //auto it = std::find(tmp.begin(), tmp.end(), '/');
      //while (it != tmp.end()) {
@@ -574,7 +526,7 @@ void MainWindow::clickAuto2sel1()
      //    it = std::find(it2+1, tmp.end(), '/');
     // }
 
-    fileName = QString::fromStdString(tmp);
+    //fileName = QString::fromStdString(tmp);
 
     ui->auto2_sel_text1->setText(fileName);
 }
@@ -582,7 +534,7 @@ void MainWindow::clickAuto2sel1()
 void MainWindow::clickAuto2sel2()
 {
      dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
-                                                     "/home",
+                                                     "C:/",
                                                       QFileDialog::DontResolveSymlinks);
 
 
