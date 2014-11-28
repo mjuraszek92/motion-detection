@@ -106,7 +106,7 @@ public:
     bool okHistory;
     bool okMixtures;
     bool okThreads;
-
+    int i;
     bool twatki[16];
 
     QMessageBox ErrorBox;
@@ -118,6 +118,8 @@ public:
 
     FFthread* fthread;
     FFthread* fthredy[16];
+    bool isDone[16];
+    bool isOn[16];
 
     mmthread* mthread;
 
@@ -243,6 +245,10 @@ private slots:
     void isdone2();
     void isdone3();
     void isdone4();
+    void isdone5();
+    void isdone6();
+    void isdone7();
+    void isdone8();
 
 
 

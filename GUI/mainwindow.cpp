@@ -182,6 +182,8 @@ void MainWindow::setDefaults(){
 
 
 
+
+
 }
 
 void MainWindow::setDefPara(){
@@ -220,7 +222,10 @@ void MainWindow::setDefPara(){
     }
 
 
-
+        for(int i = 0;i<17;i++){
+            isDone[i]=false;
+            isOn[i]=false;
+        }
 
 
 
@@ -439,6 +444,39 @@ void MainWindow::clickAuto2start()
                                                     fthredy[nr-1]->start();
 
                                                         twatki[nr-1]=true;
+                                                        isOn[nr]=true;
+
+
+                                                        if(nr==1){
+                                                            connect(fthredy[nr-1], SIGNAL(finished()), this, SLOT(isdone1()));
+                                                        }
+                                                        if(nr==2){
+                                                            connect(fthredy[nr-1], SIGNAL(finished()), this, SLOT(isdone2()));
+                                                        }
+                                                        if(nr==3){
+                                                            connect(fthredy[nr-1], SIGNAL(finished()), this, SLOT(isdone3()));
+                                                        }
+                                                        if(nr==4){
+                                                            connect(fthredy[nr-1], SIGNAL(finished()), this, SLOT(isdone4()));
+                                                        }
+                                                        if(nr==5){
+                                                            connect(fthredy[nr-1], SIGNAL(finished()), this, SLOT(isdone1()));
+                                                        }
+                                                        if(nr==6){
+                                                            connect(fthredy[nr-1], SIGNAL(finished()), this, SLOT(isdone2()));
+                                                        }
+                                                        if(nr==7){
+                                                            connect(fthredy[nr-1], SIGNAL(finished()), this, SLOT(isdone3()));
+                                                        }
+                                                        if(nr==8){
+                                                            connect(fthredy[nr-1], SIGNAL(finished()), this, SLOT(isdone4()));
+                                                        }
+
+                                                        runing=true;
+                                                        //ui->auto1_back->setText("Przerwij");
+
+
+
 
                                                         }
                                                         } else {
@@ -618,8 +656,8 @@ void MainWindow::clickManback()
         ui->Man->hide();
         ui->zapis->hide();
     } else {
-        mthread->terminate();
         mthread->stop();
+        mthread->terminate();
         runing = false;
         manualCheck();
     }
@@ -734,6 +772,8 @@ void MainWindow::clickMansave()
 void MainWindow::clickAuto1back()
 {
 
+
+    runing=false;
     ui->Auto1->hide();
     setDefPara();
     nr = 0;
@@ -1192,6 +1232,19 @@ void MainWindow::manualCheck(){
 
 void MainWindow::isdone1(){
 
+    isDone[1] = true;
+
+    ui->Status->setText("\n\n");
+
+    for(int i=0;i<17;i++){
+        if(isOn[i]==true){
+            if(isDone[i]==true){
+                ui->Status->setText(ui->Status->toPlainText() + "\nZakończono");
+            } else {
+                ui->Status->setText(ui->Status->toPlainText() + "\nTrwa");
+            }
+        }
+    }
 
 
 
@@ -1199,11 +1252,39 @@ void MainWindow::isdone1(){
 
 void MainWindow::isdone2(){
 
+    isDone[2] = true;
+
+    ui->Status->setText("\n\n");
+
+    for(int i=0;i<17;i++){
+        if(isOn[i]==true){
+            if(isDone[i]==true){
+                ui->Status->setText(ui->Status->toPlainText() + "\nZakończono");
+            } else {
+                ui->Status->setText(ui->Status->toPlainText() + "\nTrwa");
+            }
+        }
+    }
 
 
 }
 
 void MainWindow::isdone3(){
+
+    isDone[3] = true;
+
+    ui->Status->setText("\n");
+
+    for(int i=0;i<17;i++){
+        if(isOn[i]==true){
+            if(isDone[i]==true){
+                ui->Status->setText(ui->Status->toPlainText() + "\nZakończono");
+            } else {
+                ui->Status->setText(ui->Status->toPlainText() + "\nTrwa");
+            }
+        }
+    }
+
 
 
 
@@ -1211,6 +1292,95 @@ void MainWindow::isdone3(){
 
 void MainWindow::isdone4(){
 
+    isDone[4] = true;
+
+    ui->Status->setText("\n\n");
+
+    for(int i=0;i<17;i++){
+        if(isOn[i]==true){
+            if(isDone[i]==true){
+                ui->Status->setText(ui->Status->toPlainText() + "\nZakończono");
+            } else {
+                ui->Status->setText(ui->Status->toPlainText() + "\nTrwa");
+            }
+        }
+    }
+
+
+}
+
+void MainWindow::isdone5(){
+
+    isDone[5] = true;
+
+    ui->Status->setText("\n\n");
+
+    for(int i=0;i<17;i++){
+        if(isOn[i]==true){
+            if(isDone[i]==true){
+                ui->Status->setText(ui->Status->toPlainText() + "\nZakończono");
+            } else {
+                ui->Status->setText(ui->Status->toPlainText() + "\nTrwa");
+            }
+        }
+    }
+
+
+}
+
+void MainWindow::isdone6(){
+
+    isDone[6] = true;
+
+    ui->Status->setText("\n\n");
+
+    for(int i=0;i<17;i++){
+        if(isOn[i]==true){
+            if(isDone[i]==true){
+                ui->Status->setText(ui->Status->toPlainText() + "\nZakończono");
+            } else {
+                ui->Status->setText(ui->Status->toPlainText() + "\nTrwa");
+            }
+        }
+    }
+
+
+}
+
+void MainWindow::isdone7(){
+
+    isDone[7] = true;
+
+    ui->Status->setText("\n\n");
+
+    for(int i=0;i<17;i++){
+        if(isOn[i]==true){
+            if(isDone[i]==true){
+                ui->Status->setText(ui->Status->toPlainText() + "\nZakończono");
+            } else {
+                ui->Status->setText(ui->Status->toPlainText() + "\nTrwa");
+            }
+        }
+    }
+
+
+}
+
+void MainWindow::isdone8(){
+
+    isDone[8] = true;
+
+    ui->Status->setText("\n\n");
+
+    for(int i=0;i<17;i++){
+        if(isOn[i]==true){
+            if(isDone[i]==true){
+                ui->Status->setText(ui->Status->toPlainText() + "\nZakończono");
+            } else {
+                ui->Status->setText(ui->Status->toPlainText() + "\nTrwa");
+            }
+        }
+    }
 
 
 }
