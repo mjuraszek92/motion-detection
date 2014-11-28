@@ -61,6 +61,7 @@
 #include <cstringt.h>
 #include "ggthread.h"
 #include "ffthread.h"
+#include "mmthread.h"
 
 using namespace std;
 
@@ -118,6 +119,7 @@ public:
     FFthread* fthread;
     FFthread* fthredy[16];
 
+    mmthread* mthread;
 
     QString videoPath;
     QFileInfo video;
@@ -167,6 +169,16 @@ public:
     bool esc;
 
     double momentFilmu;
+
+
+    //cv::Mat picToShow;
+
+
+
+
+
+
+
     //~MANUAL
 
 
@@ -210,11 +222,22 @@ private slots:
     void clickMetoda1();
     void clickMetoda2();
 
+    void clickSet_end();
+    void clickSet_start();
+    void clickGo_end();
+    void clickGo_start();
+
     void updateImg();
+
+    void manualCheck();
 
     void slider();
 
     void sprawdz();
+
+
+
+
 
     void isdone1();
     void isdone2();

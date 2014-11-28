@@ -90,12 +90,6 @@ public:
     QPushButton *man_back;
     QPushButton *man_next;
     QPushButton *man_save;
-    QLineEdit *man_name;
-    QLineEdit *man_start_time;
-    QLineEdit *man_stop_time;
-    QLabel *label_7;
-    QLabel *label_8;
-    QLabel *label_9;
     QSlider *horizontalSlider;
     QPushButton *man_play;
     QPushButton *man_5plus;
@@ -103,6 +97,10 @@ public:
     QPushButton *man_1plus;
     QPushButton *man_1minus;
     QLabel *label_22;
+    QPushButton *go_start;
+    QPushButton *go_end;
+    QPushButton *set_start;
+    QPushButton *set_end;
     QWidget *Auto1;
     QLabel *label_10;
     QPushButton *auto1_back;
@@ -298,24 +296,6 @@ public:
         man_save = new QPushButton(Man);
         man_save->setObjectName(QStringLiteral("man_save"));
         man_save->setGeometry(QRect(640, 340, 171, 61));
-        man_name = new QLineEdit(Man);
-        man_name->setObjectName(QStringLiteral("man_name"));
-        man_name->setGeometry(QRect(640, 150, 151, 20));
-        man_start_time = new QLineEdit(Man);
-        man_start_time->setObjectName(QStringLiteral("man_start_time"));
-        man_start_time->setGeometry(QRect(640, 180, 61, 20));
-        man_stop_time = new QLineEdit(Man);
-        man_stop_time->setObjectName(QStringLiteral("man_stop_time"));
-        man_stop_time->setGeometry(QRect(640, 210, 61, 20));
-        label_7 = new QLabel(Man);
-        label_7->setObjectName(QStringLiteral("label_7"));
-        label_7->setGeometry(QRect(570, 150, 61, 20));
-        label_8 = new QLabel(Man);
-        label_8->setObjectName(QStringLiteral("label_8"));
-        label_8->setGeometry(QRect(570, 180, 61, 20));
-        label_9 = new QLabel(Man);
-        label_9->setObjectName(QStringLiteral("label_9"));
-        label_9->setGeometry(QRect(570, 210, 61, 20));
         horizontalSlider = new QSlider(Man);
         horizontalSlider->setObjectName(QStringLiteral("horizontalSlider"));
         horizontalSlider->setGeometry(QRect(80, 540, 381, 19));
@@ -338,6 +318,18 @@ public:
         label_22 = new QLabel(Man);
         label_22->setObjectName(QStringLiteral("label_22"));
         label_22->setGeometry(QRect(40, 60, 501, 401));
+        go_start = new QPushButton(Man);
+        go_start->setObjectName(QStringLiteral("go_start"));
+        go_start->setGeometry(QRect(590, 170, 111, 41));
+        go_end = new QPushButton(Man);
+        go_end->setObjectName(QStringLiteral("go_end"));
+        go_end->setGeometry(QRect(590, 220, 111, 41));
+        set_start = new QPushButton(Man);
+        set_start->setObjectName(QStringLiteral("set_start"));
+        set_start->setGeometry(QRect(710, 170, 111, 41));
+        set_end = new QPushButton(Man);
+        set_end->setObjectName(QStringLiteral("set_end"));
+        set_end->setGeometry(QRect(710, 220, 111, 41));
         Auto1 = new QWidget(centralWidget);
         Auto1->setObjectName(QStringLiteral("Auto1"));
         Auto1->setGeometry(QRect(0, 0, 861, 601));
@@ -475,15 +467,20 @@ public:
         man_back->setText(QApplication::translate("MainWindow", "Wstecz", 0));
         man_next->setText(QApplication::translate("MainWindow", "Nast\304\231pny", 0));
         man_save->setText(QApplication::translate("MainWindow", "Zapisz", 0));
-        label_7->setText(QApplication::translate("MainWindow", "Nazwa filmu:", 0));
-        label_8->setText(QApplication::translate("MainWindow", "Start Filmu:", 0));
-        label_9->setText(QApplication::translate("MainWindow", "Stop Filmu:", 0));
         man_play->setText(QApplication::translate("MainWindow", "play", 0));
         man_5plus->setText(QApplication::translate("MainWindow", "+5", 0));
         man_5minus->setText(QApplication::translate("MainWindow", "-5", 0));
         man_1plus->setText(QApplication::translate("MainWindow", "+1", 0));
         man_1minus->setText(QApplication::translate("MainWindow", "-1", 0));
         label_22->setText(QString());
+        go_start->setText(QApplication::translate("MainWindow", "id\305\272 na\n"
+" pocz\304\205tek fragmentu", 0));
+        go_end->setText(QApplication::translate("MainWindow", "id\305\272 na\n"
+" koniec fragmentu", 0));
+        set_start->setText(QApplication::translate("MainWindow", "ustaw\n"
+" pocz\304\205tek fragmentu", 0));
+        set_end->setText(QApplication::translate("MainWindow", "ustaw\n"
+" pocz\304\205tek fragmentu", 0));
         label_10->setText(QApplication::translate("MainWindow", "Tryb Automatyczny", 0));
         auto1_back->setText(QApplication::translate("MainWindow", "Wstecz", 0));
         auto1_add->setText(QApplication::translate("MainWindow", "Dodaj", 0));

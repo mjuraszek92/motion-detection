@@ -112,7 +112,14 @@ void MainWindow::connectActions()
      connect(ui->auto2_met1, SIGNAL(clicked()), this, SLOT(clickMetoda1()));
      connect(ui->auto2_met2, SIGNAL(clicked()), this, SLOT(clickMetoda2()));
 
-     connect(ui->horizontalSlider, SIGNAL(sliderMoved(int)), this, SLOT(slider()));
+     connect(ui->horizontalSlider, SIGNAL(sliderMoved()), this, SLOT(slider()));
+     //connect(ui->horizontalSlider, SIGNAL(sliderPressed()), this, SLOT(clickManplay()));
+
+
+     connect(ui->go_end, SIGNAL(clicked()), this, SLOT(clickGo_end()));
+     connect(ui->go_start, SIGNAL(clicked()), this, SLOT(clickGo_start()));
+     connect(ui->set_end, SIGNAL(clicked()), this, SLOT(clickSet_end()));
+     connect(ui->set_start, SIGNAL(clicked()), this, SLOT(clickSet_start()));
 
      timer = new QTimer(this);
      connect(timer,SIGNAL(timeout()),this,SLOT(updateImg()));
@@ -142,13 +149,14 @@ void MainWindow::setDefaults(){
     ui->Man->setAutoFillBackground(true);
     ui->Man->hide();
     nr = 0;
-    //ui->auto2_sel_text1->setDisabled(true);
-    ui->auto2_sel_text1->setText("F:/film2.avi");
+    ui->auto2_sel_text1->setDisabled(true);
+    //ui->auto2_sel_text1->setText("F:/film2.avi");
     ui->auto2_sel_text2->setDisabled(true);
     ui->Lp->setDisabled(true);
     ui->Name->setDisabled(true);
     ui->Status->setDisabled(true);
-
+    ui->label_6->setText("Tryb Auto Solo");
+    ui->label_10->setText("Tryb Auto Multi");
     ui->auto2_sel_text2->hide();
     ui->auto2_select2->hide();
     ui->label_2->hide();
@@ -179,12 +187,12 @@ void MainWindow::setDefaults(){
 void MainWindow::setDefPara(){
 
     FramesSkip = 1;
-    GapSize = 60;
-    MotionLen = 30;
+    GapSize = 90;
+    MotionLen = 60;
     BeforeMove = 30;
     AfterMove = 30;
-    Area = 0.001;
-    History = 100;
+    Area = 0.0005;
+    History = 200;
     Mixtures = 3;
     Threads = 1;
     Metod = 1;
@@ -239,7 +247,7 @@ void MainWindow::clickTrybAuto1()
 void MainWindow::clickTrybAuto2()
 {
     tryb = 2;
-    ui->label_6->setText("Tryb Automatyczny 2");
+    ui->label_6->setText("Tryb Auto Solo");
     ui->Auto2->show();
     ui->label_3->show();
     ui->Threads->show();
@@ -346,6 +354,7 @@ void MainWindow::clickAuto2start()
                                                         qDebug("DONE!");
 
                                                         if(!movie.isOpened()){
+                                                             ErrorBox.critical(0, "Błędna ścieżka","Podana ścieżka do pliku jest niepoprawna");
                                                                    qDebug() << "Error, video not loaded";
                                                         }
                                                          else {
@@ -408,10 +417,31 @@ void MainWindow::clickAuto2start()
                                                         parametry["threads"] = Threads;
                                                         //std::string path = "F://film2.avi";
 
+                                                        videoPath = QString::fromStdString(path);
+                                                        video.setFile(videoPath);
+                                                        if(video.exists()){
+                                                        path = videoPath.toUtf8().constData();
+                                                        movie.open(path);
+
+
+                                                        qDebug("DONE!");
+
+                                                        if(!movie.isOpened()){
+                                                             ErrorBox.critical(0, "Błędna ścieżka","Podana ścieżka do pliku jest niepoprawna");
+                                                                   qDebug() << "Error, video not loaded";
+                                                        }
+                                                         else {
+
                                                     fthredy[nr-1] = new FFthread(path,parametry);
                                                     fthredy[nr-1]->start();
 
                                                         twatki[nr-1]=true;
+
+                                                        }
+                                                        } else {
+                                                            ErrorBox.critical(0, "Błędna ścieżka","Podana ścieżka do pliku jest niepoprawna");
+                                                            qDebug() << "Error, video not loaded";
+                                                        }
 
 
 
@@ -441,14 +471,46 @@ void MainWindow::clickAuto2start()
                                                     video.setFile(videoPath);
                                                     if(video.exists()){
                                                     path = videoPath.toUtf8().constData();
-                                                    movie.open(path);
+                                                    //movie.open(path);
 
 
-                                                    qDebug("DONE!");
 
-                                                    if(!movie.isOpened()){
-                                                               qDebug() << "Error, video not loaded";
-                                                    }
+                                                      counter = 0;
+
+
+                                                      mthread = new mmthread(path,parametry, &allFrames, &motion, &movie, &width, &height, &counter);
+                                                      connect(mthread, SIGNAL(finished()), this, SLOT(manualCheck()));
+                                                      mthread->start();
+
+                                                      ui->horizontalSlider->setDisabled(true);
+                                                      ui->go_end->setDisabled(true);
+                                                      ui->go_start->setDisabled(true);
+                                                      ui->set_end->setDisabled(true);
+                                                      ui->set_start->setDisabled(true);
+                                                      ui->man_1minus->setDisabled(true);
+                                                      ui->man_5minus->setDisabled(true);
+                                                      ui->man_1plus->setDisabled(true);
+                                                      ui->man_5plus->setDisabled(true);
+                                                      ui->man_back->setText("Przetwij");
+                                                      ui->man_play->setDisabled(true);
+                                                      ui->man_save->setDisabled(true);
+                                                      ui->man_next->setDisabled(true);
+
+                                                      runing = true;
+
+
+                                                    //motion_detection(path,parametry, allFrames, motion, movie, width, height, counter);
+
+
+
+
+
+
+
+
+
+
+
                                                     }
 
 
@@ -549,8 +611,15 @@ void MainWindow::clickAuto2sel2()
 //Tryb Manualny
 void MainWindow::clickManback()
 {
-    ui->Man->hide();
-    ui->zapis->hide();
+    if(runing==false){
+        ui->Man->hide();
+        ui->zapis->hide();
+    } else {
+        mthread->terminate();
+        mthread->stop();
+        runing = false;
+        manualCheck();
+    }
 
 }
 
@@ -567,24 +636,93 @@ void MainWindow::clickMannext()
 void MainWindow::updateImg(){
 
 
-   movie.read(frame);
+
+    if(curFrame>=motion.size()){
+        return;
+        ui->man_play->setText("Pause");
+    }
+
+//   movie.read(frame);
+
+//   if (frame.empty()==true){
+//       qDebug("EMPTY");
+//       timer->stop();
+//       return;
+//   }
+//    cv::resize(frame,frame,res.size());
+//   //qDebug() << frame.rows;
+
+
+//    cv::cvtColor(frame, frame, CV_BGR2RGB);
+   // frame = playVideo(motion,allFrames,stop,esc,curFrame, momentFilmu, k, mSec, data_storage);
+
+    if (data_storage == 1)
+    {
+        std::string pic_name = std::string("img") + std::to_string((long double)curFrame) + std::string(".jpg");
+        frame = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+    }
+    else
+    {
+        frame = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
+    }
+
+//		cv::imshow("Motion",picToShow);
     cv::resize(frame,frame,res.size());
-   //qDebug() << frame.rows;
-   if (frame.empty()==true){
-       return;
-   }
+    curFrame=curFrame + 1;
 
+     ui->horizontalSlider->setValue(((int)(100*curFrame/motion.size())));
 
-    cv::cvtColor(frame, frame, CV_BGR2RGB);
     QImage qim((uchar*)frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
+    qDebug("wat");
 
-    ui->label_22->setPixmap((QPixmap::fromImage(qim)));
+   ui->label_22->setPixmap((QPixmap::fromImage(qim)));
+
 
 
 }
 
 void MainWindow::clickMansave()
 {
+
+    clickManplay();
+
+    if (data_storage == 1)
+            chdir("..");
+
+        videocv.open((fragmentList[curFragment].name),CV_FOURCC('M','P','E','G'),fps, cv::Size(width,height),true);
+        for (int j=begin; j<=end; j++)
+        {
+            if (data_storage == 1)
+            {
+                chdir("images");
+                std::string pic_name = std::string("img") + std::to_string((long double)j) + std::string(".jpg");
+                frame = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+                chdir("..");
+            }
+            else
+            {
+                frame = cv::imdecode(cv::Mat(allFrames[j]),CV_LOAD_IMAGE_COLOR);
+            }
+            videocv.write(frame);
+        }
+        videocv.release();
+
+        // Przeskoczenie na następny fragment (jeśli jest) i ustawienie aktualnych informacji dotyczących fragmentu
+        if (curFragment + 1 != fragmentList.size())
+        {
+            curFragment = curFragment + 1;
+            begin = fragmentList[curFragment].begin;
+            end = fragmentList[curFragment].end;
+            curFrame = begin;
+        }
+        std::cout << fragmentList[curFragment].name << std::endl;
+        if (data_storage == 1)
+            chdir("images");
+
+        QMessageBox msgBox;
+        msgBox.setWindowTitle("Koniec");
+        msgBox.setText("Zapisano!");
+        msgBox.exec();
 
 
 }
@@ -596,6 +734,7 @@ void MainWindow::clickAuto1back()
     ui->Auto1->hide();
     setDefPara();
     nr = 0;
+    timer->stop();
 
 }
 
@@ -614,6 +753,9 @@ void MainWindow::clickAuto1add()
 }
 
 void MainWindow::clickManplay(){
+
+    stop = false;
+
 
 //    videoPath = QString::fromStdString("F://film2.avi");
 //    video.setFile(fileName);
@@ -648,7 +790,9 @@ void MainWindow::clickManplay(){
 
     if(timer->isActive()==true){
         timer->stop();
-        ui->man_play->setText("Play");
+        ui->man_play->
+                setText("Play");
+        stop = true;
     } else{
         timer->start(20);
          ui->man_play->setText("Pause");
@@ -660,20 +804,131 @@ void MainWindow::clickManplay(){
 
 void MainWindow::clickMan5plus(){
 
+    if (curFrame + 5 < motion.size())
+        curFrame = curFrame + 5;
+    else
+        curFrame = motion.size();
+
+    if(!timer->isActive()){
+
+        if (data_storage == 1)
+        {
+            std::string pic_name = std::string("img") + std::to_string((long double)curFrame) + std::string(".jpg");
+            frame = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+        }
+        else
+        {
+            frame = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
+        }
+
+        cv::resize(frame,frame,res.size());
+
+
+         ui->horizontalSlider->setValue(((int)(100*curFrame/motion.size())));
+
+        QImage qim((uchar*)frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
+        qDebug("wat");
+
+       ui->label_22->setPixmap((QPixmap::fromImage(qim)));
+    }
 
 }
 
 void MainWindow::clickMan1plus(){
 
+    if (curFrame + 1 < motion.size())
+        curFrame = curFrame + 1;
+    else
+        curFrame = motion.size();
+
+    if(!timer->isActive()){
+
+        if (data_storage == 1)
+        {
+            std::string pic_name = std::string("img") + std::to_string((long double)curFrame) + std::string(".jpg");
+            frame = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+        }
+        else
+        {
+            frame = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
+        }
+
+        cv::resize(frame,frame,res.size());
+
+
+         ui->horizontalSlider->setValue(((int)(100*curFrame/motion.size())));
+
+        QImage qim((uchar*)frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
+        qDebug("wat");
+
+       ui->label_22->setPixmap((QPixmap::fromImage(qim)));
+    }
 
 }
 
 void MainWindow::clickMan5minus(){
 
+    if (curFrame - 5 > 0)
+        curFrame = curFrame - 5;
+    else
+        curFrame = 0;
+
+    if(!timer->isActive()){
+
+        if (data_storage == 1)
+        {
+            std::string pic_name = std::string("img") + std::to_string((long double)curFrame) + std::string(".jpg");
+            frame = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+        }
+        else
+        {
+            frame = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
+        }
+
+        cv::resize(frame,frame,res.size());
+
+
+         ui->horizontalSlider->setValue(((int)(100*curFrame/motion.size())));
+
+        QImage qim((uchar*)frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
+        qDebug("wat");
+
+       ui->label_22->setPixmap((QPixmap::fromImage(qim)));
+    }
 
 }
 
 void MainWindow::clickMan1minus(){
+
+
+        if (curFrame - 1 > 0)
+            curFrame = curFrame - 1;
+        else
+            curFrame = 0;
+
+        if(!timer->isActive()){
+
+            if (data_storage == 1)
+            {
+                std::string pic_name = std::string("img") + std::to_string((long double)curFrame) + std::string(".jpg");
+                frame = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+            }
+            else
+            {
+                frame = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
+            }
+
+            cv::resize(frame,frame,res.size());
+
+
+             ui->horizontalSlider->setValue(((int)(100*curFrame/motion.size())));
+
+            QImage qim((uchar*)frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
+            qDebug("wat");
+
+           ui->label_22->setPixmap((QPixmap::fromImage(qim)));
+        }
+
 
 
 }
@@ -709,7 +964,13 @@ void MainWindow::clickMetoda2(){
 
 void MainWindow::slider(){
 
-    //ui->man_save->setText(QString::number(ui->horizontalSlider->value()));
+    clickManplay();
+    //curFrame = (int)(momentFilmu*motion.size());
+    curFrame = (ui->horizontalSlider->value()/100)*motion.size();
+    //ui->man_save->setText(QString::number(ui->horizontalSlider->value(),10));
+    clickManplay();
+
+
 
 }
 
@@ -730,6 +991,198 @@ void MainWindow::sprawdz(){
         }
         watkiz=0;
     }
+
+}
+
+void MainWindow::clickSet_end(){
+
+    end = curFrame;
+
+}
+
+void MainWindow::clickSet_start(){
+
+    begin = curFrame;
+
+}
+
+void MainWindow::clickGo_end(){
+
+    curFrame = end;
+    if (data_storage == 1)
+    {
+        std::string pic_name = std::string("img") + std::to_string((long double)curFrame) + std::string(".jpg");
+        frame = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+    }
+    else
+    {
+        frame = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
+    }
+
+    if(!timer->isActive()){
+
+        if (data_storage == 1)
+        {
+            std::string pic_name = std::string("img") + std::to_string((long double)curFrame) + std::string(".jpg");
+            frame = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+        }
+        else
+        {
+            frame = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
+        }
+
+        cv::resize(frame,frame,res.size());
+
+
+         ui->horizontalSlider->setValue(((int)(100*curFrame/motion.size())));
+
+        QImage qim((uchar*)frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
+        qDebug("wat");
+
+       ui->label_22->setPixmap((QPixmap::fromImage(qim)));
+    }
+
+}
+
+void MainWindow::clickGo_start(){
+
+    curFrame = begin;
+    if (data_storage == 1)
+    {
+        std::string pic_name = std::string("img") + std::to_string((long double)curFrame) + std::string(".jpg");
+        frame = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+    }
+    else
+    {
+        frame = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
+    }
+
+    if(!timer->isActive()){
+
+        if (data_storage == 1)
+        {
+            std::string pic_name = std::string("img") + std::to_string((long double)curFrame) + std::string(".jpg");
+            frame = cv::imread(pic_name, CV_LOAD_IMAGE_COLOR);
+        }
+        else
+        {
+            frame = cv::imdecode(cv::Mat(allFrames[curFrame]),CV_LOAD_IMAGE_COLOR);
+        }
+
+        cv::resize(frame,frame,res.size());
+
+
+         ui->horizontalSlider->setValue(((int)(100*curFrame/motion.size())));
+
+        QImage qim((uchar*)frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
+        qDebug("wat");
+
+       ui->label_22->setPixmap((QPixmap::fromImage(qim)));
+    }
+
+}
+
+void MainWindow::manualCheck(){
+
+//    QMessageBox msgBox;
+//    msgBox.setWindowTitle("Koniec");
+//    msgBox.setText("Zapisano!");
+//    msgBox.exec();
+
+    ui->horizontalSlider->setDisabled(false);
+    ui->go_end->setDisabled(false);
+    ui->go_start->setDisabled(false);
+    ui->set_end->setDisabled(false);
+    ui->set_start->setDisabled(false);
+    ui->man_1minus->setDisabled(false);
+    ui->man_5minus->setDisabled(false);
+    ui->man_1plus->setDisabled(false);
+    ui->man_5plus->setDisabled(false);
+    ui->man_back->setText("Wstecz");
+    ui->man_play->setDisabled(false);
+    ui->man_save->setDisabled(false);
+    ui->man_next->setDisabled(false);
+
+
+    if(runing==true){
+        movies_count = 0;
+        break_flag = 0;
+        index = 0;
+
+    qDebug("1");
+    while( true )
+        {
+        qDebug("2");
+            movieFragment movieData;
+            ++movies_count;
+            while( motion[index] == 0 )
+            {
+                qDebug("3");
+                ++index;
+                if( index == motion.size() )
+                {
+                    break_flag = 1;
+                    break;
+                }
+            }
+            if( break_flag )
+            {
+                break;
+            }
+
+            qDebug("4");
+            movieData.begin = index;
+            video_name = std::string("video_") + std::to_string((long double)movies_count) + std::string(".avi");
+            movieData.name = video_name;
+
+            while( motion[index] == 1 )
+            {
+                ++index;
+                if( index == motion.size() )
+                {
+                    break_flag = 1;
+                    break;
+                }
+            }
+            movieData.end = index - 1;
+            if( break_flag)
+            {
+                break;
+            }
+            fragmentList.push_back(movieData);
+
+        }
+
+
+
+        fps = movie.get(CV_CAP_PROP_FPS);
+        maxFrame;
+        if (allFrames.size()>counter)
+            maxFrame = allFrames.size();
+        else
+            maxFrame = counter;
+
+        if((movie.get(CV_CAP_PROP_FRAME_COUNT)/maxFrame) > 1.2 )
+        {
+            fps = fps/2;
+        }
+
+        k;
+        mSec = (int)(1000/fps);
+        curFragment = 0;
+        curFrame = fragmentList[0].begin;
+        begin = fragmentList[0].begin;
+        end = fragmentList[0].end;
+        stop = false;
+        esc = false;
+
+    qDebug("DONE!");
+    }
+
+    runing = false;
+
+
+
 
 }
 
