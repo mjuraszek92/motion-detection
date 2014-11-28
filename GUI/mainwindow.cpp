@@ -242,6 +242,7 @@ void MainWindow::clickTrybAuto1()
 {
     tryb = 1;
     ui->Auto1->show();
+    ui->label_7->hide();
 }
 
 void MainWindow::clickTrybAuto2()
@@ -250,6 +251,7 @@ void MainWindow::clickTrybAuto2()
     ui->label_6->setText("Tryb Auto Solo");
     ui->Auto2->show();
     ui->label_3->show();
+    ui->label_7->show();
     ui->Threads->show();
 }
 
@@ -259,6 +261,7 @@ void MainWindow::clickTrybManu()
     ui->label_6->setText("Tryb Manualny");
     ui->Auto2->show();
     ui->zapis->show();
+    ui->label_7->hide();
     tryb = 0;
 }
 

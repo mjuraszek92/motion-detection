@@ -86,6 +86,7 @@ public:
     QRadioButton *zapis1;
     QRadioButton *zapis2;
     QLabel *label_12;
+    QLabel *label_7;
     QWidget *Man;
     QPushButton *man_back;
     QPushButton *man_next;
@@ -284,6 +285,9 @@ public:
         label_12 = new QLabel(zapis);
         label_12->setObjectName(QStringLiteral("label_12"));
         label_12->setGeometry(QRect(30, 30, 131, 16));
+        label_7 = new QLabel(Auto2);
+        label_7->setObjectName(QStringLiteral("label_7"));
+        label_7->setGeometry(QRect(760, 190, 46, 13));
         Man = new QWidget(centralWidget);
         Man->setObjectName(QStringLiteral("Man"));
         Man->setGeometry(QRect(0, 0, 851, 601));
@@ -330,6 +334,21 @@ public:
         set_end = new QPushButton(Man);
         set_end->setObjectName(QStringLiteral("set_end"));
         set_end->setGeometry(QRect(710, 220, 111, 41));
+        man_back->raise();
+        man_next->raise();
+        man_save->raise();
+        horizontalSlider->raise();
+        man_play->raise();
+        man_5plus->raise();
+        man_5minus->raise();
+        man_1plus->raise();
+        man_1minus->raise();
+        label_22->raise();
+        go_start->raise();
+        go_end->raise();
+        set_start->raise();
+        set_end->raise();
+        Auto2->raise();
         Auto1 = new QWidget(centralWidget);
         Auto1->setObjectName(QStringLiteral("Auto1"));
         Auto1->setGeometry(QRect(0, 0, 861, 601));
@@ -393,8 +412,8 @@ public:
         pushButton_3->raise();
         pushButton_4->raise();
         Auto1->raise();
-        Auto2->raise();
         Man->raise();
+        Auto2->raise();
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
         menuBar->setGeometry(QRect(0, 0, 860, 21));
@@ -464,6 +483,7 @@ public:
         zapis1->setText(QApplication::translate("MainWindow", "Pami\304\231\304\207 RAM", 0));
         zapis2->setText(QApplication::translate("MainWindow", "Dysk", 0));
         label_12->setText(QApplication::translate("MainWindow", "Przechowywanie danych:", 0));
+        label_7->setText(QApplication::translate("MainWindow", "(1-16)", 0));
         man_back->setText(QApplication::translate("MainWindow", "Wstecz", 0));
         man_next->setText(QApplication::translate("MainWindow", "Nast\304\231pny", 0));
         man_save->setText(QApplication::translate("MainWindow", "Zapisz", 0));

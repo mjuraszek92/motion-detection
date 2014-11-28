@@ -612,6 +612,19 @@
       </property>
      </widget>
     </widget>
+    <widget class="QLabel" name="label_7">
+     <property name="geometry">
+      <rect>
+       <x>760</x>
+       <y>190</y>
+       <width>46</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>(1-16)</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="Man" native="true">
     <property name="geometry">
@@ -808,6 +821,21 @@
  początek fragmentu</string>
      </property>
     </widget>
+    <zorder>man_back</zorder>
+    <zorder>man_next</zorder>
+    <zorder>man_save</zorder>
+    <zorder>horizontalSlider</zorder>
+    <zorder>man_play</zorder>
+    <zorder>man_5plus</zorder>
+    <zorder>man_5minus</zorder>
+    <zorder>man_1plus</zorder>
+    <zorder>man_1minus</zorder>
+    <zorder>label_22</zorder>
+    <zorder>go_start</zorder>
+    <zorder>go_end</zorder>
+    <zorder>set_start</zorder>
+    <zorder>set_end</zorder>
+    <zorder>Auto2</zorder>
    </widget>
    <widget class="QWidget" name="Auto1" native="true">
     <property name="geometry">
@@ -989,8 +1017,8 @@
    <zorder>pushButton_3</zorder>
    <zorder>pushButton_4</zorder>
    <zorder>Auto1</zorder>
-   <zorder>Auto2</zorder>
    <zorder>Man</zorder>
+   <zorder>Auto2</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
